@@ -2,6 +2,7 @@
 extern crate itertools;
 use std::fs;
 use std::time::Instant;
+
 fn read_file(path: &String) -> Vec<String> {
     let res: Vec<String> = fs::read_to_string(path)
         .expect("oink")
@@ -18,7 +19,7 @@ enum TaskOfDay {
     Second,
 }
 
-fn run<T>(day: i32, f: &dyn Fn(&Vec<String>) -> T) -> T {
+fn run<T>(day: i32, f: fn(&Vec<String>) -> T) -> T {
     let path = format!("res/input_{:02}.txt", day);
     let contents: Vec<String> = read_file(&path);
     let now = Instant::now();
@@ -103,21 +104,21 @@ fn day3(input: &Vec<String>, part: TaskOfDay) -> i64 {
 }
 
 fn main() {
-    println!("day1 {}", run(1, &day1));
+    println!("day1 {}", run(1, day1));
     println!(
         "day2, first {}",
-        run(2, &|input| day2(input, TaskOfDay::First))
+        run(2, |input| day2(input, TaskOfDay::First))
     );
     println!(
         "day2, second {}",
-        run(2, &|input| day2(input, TaskOfDay::Second))
+        run(2, |input| day2(input, TaskOfDay::Second))
     );
     println!(
         "day3, first {}",
-        run(3, &|input| day3(input, TaskOfDay::First))
+        run(3, |input| day3(input, TaskOfDay::First))
     );
     println!(
         "day3, second {}",
-        run(3, &|input| day3(input, TaskOfDay::Second))
+        run(3, |input| day3(input, TaskOfDay::Second))
     );
 }
