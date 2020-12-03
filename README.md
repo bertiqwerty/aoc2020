@@ -1,2 +1,2 @@
-# aoc2020
-Advent of code for learning RUST
+# Advent of Code 2020
+For learning @rust-lang
