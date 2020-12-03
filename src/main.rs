@@ -5,7 +5,7 @@ use std::time::Instant;
 
 fn read_file(path: &String) -> Vec<String> {
     let res: Vec<String> = fs::read_to_string(path)
-        .expect("oink")
+        .expect("Could not read file.")
         .split("\n")
         .map(|s| s.trim())
         .filter(|s| s.len() > 0)
