@@ -98,7 +98,7 @@ fn day3(input: &Vec<String>, part: TaskOfDay) -> i64 {
             vec!(1usize, 1usize, 1usize, 1usize, 2usize).iter(),
             vec!(1usize, 3usize, 5usize, 7usize, 1usize).iter()
         )
-        .map(|(r, c)| sum_of_steps(&tree_matrix, r.clone(), c.clone()) as i64)
+        .map(|(r, c)| sum_of_steps(&tree_matrix, *r, *c) as i64)
         .product(),
     }
 }
