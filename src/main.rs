@@ -14,7 +14,7 @@ enum TaskOfDay {
 }
 
 
-fn run(day: i32, f: &dyn Fn(&Vec<String>) -> i32) -> i32
+fn run<T>(day: i32, f: &dyn Fn(&Vec<String>) -> T) -> T
 {
     let path =  format!("res/input_{:02}.txt", day);
     let contents: Vec<String> = read_file(&path);
@@ -61,8 +61,36 @@ fn day2(input: &Vec<String>, part: TaskOfDay) -> i32 {
 
 }
 
+fn sum_of_steps(tree_matrix: &Vec<Vec<i32>>, row_step: usize, col_step: usize) -> i32
+{
+    let mut sum = 0i32;
+    for (row, col) in izip!((row_step..tree_matrix.len()).step_by(row_step), 
+        (col_step..tree_matrix.len()*col_step).step_by(col_step))
+    {
+        sum += tree_matrix[row].iter().cycle().nth(col).unwrap();
+    }
+    sum
+}
+
+fn day3(input: &Vec<String>, part: TaskOfDay) -> i64 {
+    let tree_matrix = input.iter()
+        .map(|s| s.chars().map(|c| (c == '#') as i32).collect::<Vec<i32>>())
+        .collect::<Vec<Vec<i32>>>();
+    match part {
+        TaskOfDay::First => sum_of_steps(&tree_matrix, 1, 3) as i64,
+        TaskOfDay::Second => izip!(
+            vec!(1usize, 1usize, 1usize, 1usize, 2usize).iter(), 
+            vec!(1usize, 3usize, 5usize, 7usize, 1usize).iter())
+                .map(|(r, c)| sum_of_steps(&tree_matrix, r.clone(), c.clone()) as i64).product(), 
+        
+    }
+}
+
 fn main() {
     println!("day1 {}", run(1, &day1));
     println!("day2, first {}", run(2, &|input| day2(input, TaskOfDay::First)));
     println!("day2, second {}", run(2, &|input| day2(input, TaskOfDay::Second)));
+    println!("day3, first {}", run(3, &|input| day3(input, TaskOfDay::First)));
+    println!("day3, second {}", run(3, &|input| day3(input, TaskOfDay::Second)));
+
 }
