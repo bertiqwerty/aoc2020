@@ -41,13 +41,16 @@ fn hcl_check(hcl_value: &String) -> bool {
     let re = Regex::new("[a-f0-9]{6}").unwrap();
     re.is_match(color) && *hashtag == hashtag_true
 }
+
 fn ecl_check(ecl_value: &String) -> bool {  
     let colors = to_string_vec(&vec!["amb", "blu", "gry", "brn", "grn", "hzl", "oth"]);
     colors.contains(ecl_value)
 }
+
 fn pid_check(pid_value:&String) -> bool {
     Regex::new("[0-9]{9}").unwrap().is_match(&pid_value) && pid_value.len() == 9
 }
+
 fn validator_part_2(passport: &String) -> bool {
     passport
         .split(" ")
@@ -107,7 +110,6 @@ fn test_in_between(){
     assert_eq!(in_between(&num, 230, 2000, 4), true);
     assert_eq!(in_between(&num, 1100, 2000, 4), true);
     assert_eq!(in_between(&num, 1100, 2000, 3), false);
-
 }
 
 #[test]
@@ -174,7 +176,6 @@ fn test_checks()
     assert_eq!(ecl_check(&"brn".to_string()), true);
     assert_eq!(ecl_check(&"wat".to_string()), false);
 
-
     assert_eq!(pid_check(&"hzl".to_string()), false);
     assert_eq!(pid_check(&"oth".to_string()), false);
     assert_eq!(pid_check(&"hzl oth".to_string()), false);
@@ -189,8 +190,5 @@ fn test_checks()
 
     assert_eq!(pid_check(&"000000001".to_string()), true);
     assert_eq!(pid_check(&"0123456789".to_string()), false);
-
-    
-
     
 }
