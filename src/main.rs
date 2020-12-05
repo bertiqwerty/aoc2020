@@ -6,6 +6,7 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
 mod common;
 use common::TaskOfDay;
 
@@ -50,8 +51,6 @@ fn run_with_blank_lines<T>(day: i32, f: fn(&Vec<String>) -> T) -> T {
     run_on_content(f, &contents)
 }
 
-
-
 fn main() {
     println!("day1 {}", run(1, day1::day1));
     println!(
@@ -78,4 +77,25 @@ fn main() {
         "day4, second {}",
         run_with_blank_lines(4, |input| day4::day4(input, TaskOfDay::Second))
     );
+    println!(
+        "day5, first {}",
+        run(5, |input| day5::day5(input, TaskOfDay::First))
+    );
+    println!(
+        "day5, second {}",
+        run(5, |input| day5::day5(input, TaskOfDay::Second))
+    );
+}
+
+#[test]
+fn test(){
+    assert_eq!(run(1, day1::day1), 48914340);
+    assert_eq!(run(2, |input| day2::day2(input, TaskOfDay::First)), 434);
+    assert_eq!(run(2, |input| day2::day2(input, TaskOfDay::Second)), 509);
+    assert_eq!(run(3, |input| day3::day3(input, TaskOfDay::First)), 247);
+    assert_eq!(run(3, |input| day3::day3(input, TaskOfDay::Second)), 2983070376i64);
+    assert_eq!(run_with_blank_lines(4, |input| day4::day4(input, TaskOfDay::First)), 247);
+    assert_eq!(run_with_blank_lines(4, |input| day4::day4(input, TaskOfDay::Second)), 145);
+    assert_eq!(run(5, |input| day5::day5(input, TaskOfDay::First)), 938);
+    assert_eq!(run(5, |input| day5::day5(input, TaskOfDay::Second)), 696);
 }
