@@ -1,15 +1,15 @@
 use super::common::split_in2_tuple;
 use super::common::TaskOfDay;
 use super::common::to_string_vec;
+use super::common::separate_by_blanks;
 use regex::Regex;
-use std::iter;
 
 fn are_needles_in_haystack(needles: &Vec<String>, haystack: &Vec<String>, any: bool) -> bool {
     let hits = needles.iter().filter(|n| haystack.contains(&n.to_string())).count();
     (any && hits > 0) || (!any && hits == needles.len())
 }
 
-fn validator_part_1(passport: &String) -> bool {
+fn validator_part_1(passport: &&String) -> bool {
     let available = passport
         .split(" ")
         .map(|s| s.split(":").next().clone().unwrap().to_string())
@@ -17,6 +17,7 @@ fn validator_part_1(passport: &String) -> bool {
     let needed: Vec<String> = to_string_vec(&vec!["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]);
     are_needles_in_haystack(&needed, &available, false)
 }
+
 fn in_between(num: &String, lb: i32, ub: i32, num_digits: i32) -> bool {
     let parsed = num.parse::<i32>().unwrap_or(lb - 1);
     lb <= parsed && parsed <= ub &&  num.len() == num_digits as usize
@@ -51,7 +52,7 @@ fn pid_check(pid_value:&String) -> bool {
     Regex::new("[0-9]{9}").unwrap().is_match(&pid_value) && pid_value.len() == 9
 }
 
-fn validator_part_2(passport: &String) -> bool {
+fn validator_part_2(passport: &&String) -> bool {
     passport
         .split(" ")
         .filter(|s| {
@@ -71,20 +72,10 @@ fn validator_part_2(passport: &String) -> bool {
 }
 
 pub fn day4(input: &Vec<String>, part: TaskOfDay) -> i32 {
-    let split_positions = input
-        .iter()
-        .enumerate()
-        .filter(|t: &(usize, &String)| t.1.len() == 0)
-        .map(|t: (usize, &String)| t.0)
-        .collect::<Vec<usize>>();
-    let splits_shifted = &split_positions[1..];
-    let passports = iter::once(input[0..split_positions[0]].join(" ")).chain(
-        izip!(&split_positions, splits_shifted)
-            .map(|t| input[t.0.clone() + 1..t.1.clone()].join(" ")),
-    );
+    let passports: Vec<String> = separate_by_blanks(input, " ");
     match part {
-        TaskOfDay::First => passports.filter(validator_part_1).count() as i32,
-        TaskOfDay::Second => passports.filter(validator_part_2).count() as i32,
+        TaskOfDay::First => passports.iter().filter(validator_part_1).count() as i32,
+        TaskOfDay::Second => passports.iter().filter(validator_part_2).count() as i32,
     }
 }
 

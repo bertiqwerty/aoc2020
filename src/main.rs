@@ -7,6 +7,7 @@ mod day2;
 mod day3;
 mod day4;
 mod day5;
+mod day6;
 mod common;
 use common::TaskOfDay;
 
@@ -28,8 +29,6 @@ fn read_file(path: &String) -> Vec<String> {
         .collect();
     res
 }
-
-
 
 fn run_on_content<T>(f: fn(&Vec<String>) -> T, contents: &Vec<String>) -> T {
     let now = Instant::now();
@@ -85,6 +84,15 @@ fn main() {
         "day5, second {}",
         run(5, |input| day5::day5(input, TaskOfDay::Second))
     );
+    println!(
+        "day6, first {}",
+        run_with_blank_lines(6, |input| day6::day6(input, TaskOfDay::First))
+    );
+    println!(
+        "day6, second {}",
+        run_with_blank_lines(6, |input| day6::day6(input, TaskOfDay::Second))
+    );
+
 }
 
 #[test]
