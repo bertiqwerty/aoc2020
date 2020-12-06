@@ -3,16 +3,16 @@ use super::common::TaskOfDay;
 use std::collections::HashSet;
 
 fn num_chars_in_all_splits(s: &str) -> i32 {
-    let subtrings = s.split_whitespace().collect::<Vec<&str>>();
+    let substrings = s.split_whitespace().collect::<Vec<&str>>();
     let is_char_in_all_substrings = |c: &char| {
-        for sub in &subtrings[1..] {
+        for sub in &substrings[1..] {
             if !sub.chars().any(|c_sub| c_sub == *c) {
                 return false;
             }
         }
         true
     };
-    let first = subtrings[0];
+    let first = substrings[0];
     first
         .chars()
         .filter(|c_first| is_char_in_all_substrings(c_first))
