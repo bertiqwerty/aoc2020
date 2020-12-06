@@ -106,4 +106,6 @@ fn test(){
     assert_eq!(run_with_blank_lines(4, |input| day4::day4(input, TaskOfDay::Second)), 145);
     assert_eq!(run(5, |input| day5::day5(input, TaskOfDay::First)), 938);
     assert_eq!(run(5, |input| day5::day5(input, TaskOfDay::Second)), 696);
+    assert_eq!(run_with_blank_lines(6, |input| day6::day6(input, TaskOfDay::First)), 6542);
+    assert_eq!(run_with_blank_lines(6, |input| day6::day6(input, TaskOfDay::Second)), 3299);
 }
