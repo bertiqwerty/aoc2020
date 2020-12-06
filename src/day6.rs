@@ -1,5 +1,4 @@
 use super::common::separate_by_blanks;
-use super::common::to_string_vec;
 use super::common::TaskOfDay;
 use std::collections::HashSet;
 
@@ -47,7 +46,7 @@ fn test() {
     let tmp = vec![
         "abc", "", "a", "b", "c", "", "ab", "ac", "", "a", "a", "a", "a", "", "b", "",
     ];
-    let input = to_string_vec(&tmp);
+    let input = tmp.iter().map(|elt| elt.to_string()).collect();
     assert_eq!(day6(&input, TaskOfDay::First), 11);
     assert_eq!(day6(&input, TaskOfDay::Second), 6);
 }

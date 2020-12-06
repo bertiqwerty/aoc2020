@@ -10,11 +10,6 @@ pub fn split_in2_tuple(s_: &str, ssplit: &str) -> (String, String) {
     (splt.next().unwrap(), splt.next().unwrap())
 }
 
-pub fn to_string_vec(v: &Vec<&str>) -> Vec<String>
-{
-    v.iter().map(|elt| elt.to_string()).collect::<Vec<String>>()
-}
-
 pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String>
 {
     // TODO: currently, last element of input must be a blank line/string
