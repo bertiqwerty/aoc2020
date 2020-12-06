@@ -32,22 +32,22 @@ pub fn day6(input: &Vec<String>, part: TaskOfDay) -> i32 {
     }
 }
 
-// #[test]
-// fn test() {
-//     assert_eq!(num_chars_in_all_splits("a a a"), 1);
-//     assert_eq!(num_chars_in_all_splits("a ab a"), 1);
-//     assert_eq!(num_chars_in_all_splits("ac ac ac"), 2);
-//     assert_eq!(num_chars_in_all_splits("a ac ab"), 1);
-//     assert_eq!(num_chars_in_all_splits("ab bac ab"), 2);
-//     assert_eq!(num_chars_in_all_splits("acb bac abc"), 3);
-//     assert_eq!(num_chars_in_all_splits("acb bac cab"), 3);
-//     assert_eq!(num_chars_in_all_splits("acb bac d abc"), 0);
-//     assert_eq!(num_chars_in_all_splits("acb bac a cab"), 1);
+#[test]
+fn test() {
+    assert_eq!(num_chars_in_all_splits("a a a"), 1);
+    assert_eq!(num_chars_in_all_splits("a ab a"), 1);
+    assert_eq!(num_chars_in_all_splits("ac ac ac"), 2);
+    assert_eq!(num_chars_in_all_splits("a ac ab"), 1);
+    assert_eq!(num_chars_in_all_splits("ab bac ab"), 2);
+    assert_eq!(num_chars_in_all_splits("acb bac abc"), 3);
+    assert_eq!(num_chars_in_all_splits("acb bac cab"), 3);
+    assert_eq!(num_chars_in_all_splits("acb bac d abc"), 0);
+    assert_eq!(num_chars_in_all_splits("acb bac a cab"), 1);
 
-//     let tmp = vec![
-//         "abc", "", "a", "b", "c", "", "ab", "ac", "", "a", "a", "a", "a", "", "b", "",
-//     ];
-//     let input = tmp.iter().map(|elt| elt.to_string()).collect();
-//     assert_eq!(day6(&input, TaskOfDay::First), 11);
-//     assert_eq!(day6(&input, TaskOfDay::Second), 6);
-// }
+    let tmp = vec![
+        "abc", "", "a", "b", "c", "", "ab", "ac", "", "a", "a", "a", "a", "", "b", "",
+    ];
+    let input = tmp.iter().map(|elt| elt.to_string()).collect();
+    assert_eq!(day6(&input, TaskOfDay::First), 11);
+    assert_eq!(day6(&input, TaskOfDay::Second), 6);
+}
