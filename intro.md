@@ -8,3 +8,9 @@ VS Code with the extensions
 on  Windows 10.
 
 # Current Results
+
+To reproduce these results make sure to have Rust installed and run
+```
+python run.py
+```
+The results will be written into the `README.md`.
