@@ -9,7 +9,7 @@ def main():
     with open(tmp_file, "r") as f:
         res = f.read()
     with open("README.md", "w") as f:
-        f.write(f"{intro}\n{res}\n")
+        f.write(f"{intro}\n```{res}```\n")
 
 
 if __name__ == "__main__":

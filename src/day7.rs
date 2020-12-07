@@ -62,6 +62,17 @@ fn is_in_bag<'a>(
         .any(|s| is_in_bag(needle, s, &bag_map))
 }
 
+fn count_sub_bags<'a>(haystack: &str, bag_map: &'a HashMap<&str, HashMap<&str, i32>>) -> i32 {
+    if bag_map[haystack].len() == 0 {
+        return 0i32;
+    }
+
+    bag_map[haystack]
+        .keys()
+        .map(|s| bag_map[haystack][s] + count_sub_bags(s, &bag_map) * bag_map[haystack][s])
+        .sum::<i32>()
+}
+
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     let bag_map = merge_line_maps(input);
     match part {
@@ -70,7 +81,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
             .filter(|k| **k != "shiny gold")
             .filter(|k| is_in_bag("shiny gold", k, &bag_map))
             .count() as i32,
-        TaskOfDay::Second => 0i32,
+        TaskOfDay::Second => count_sub_bags("shiny gold", &bag_map),
     }
 }
 
@@ -90,19 +101,6 @@ dotted black bags contain no other bags.";
     let bag_map = merge_line_maps(&input);
 
     assert_eq!(
-        parse_line(&input[0]),
-        [(
-            "light red",
-            [("bright white", 1), ("muted yellow", 2)]
-                .iter()
-                .cloned()
-                .collect()
-        )]
-        .iter()
-        .cloned()
-        .collect()
-    );
-    assert_eq!(
         parse_line(&input[1]),
         [(
             "dark orange",
@@ -114,16 +112,6 @@ dotted black bags contain no other bags.";
             .iter()
             .cloned()
             .collect()
-        )]
-        .iter()
-        .cloned()
-        .collect()
-    );
-    assert_eq!(
-        parse_line(&input[2]),
-        [(
-            "bright white",
-            [("shiny gold", 1)].iter().cloned().collect()
         )]
         .iter()
         .cloned()
@@ -143,57 +131,8 @@ dotted black bags contain no other bags.";
         .collect()
     );
     assert_eq!(
-        parse_line(&input[4]),
-        [(
-            "shiny gold",
-            [("dark olive", 1), ("vibrant plum", 2)]
-                .iter()
-                .cloned()
-                .collect()
-        )]
-        .iter()
-        .cloned()
-        .collect()
-    );
-    assert_eq!(
-        parse_line(&input[5]),
-        [(
-            "dark olive",
-            [("faded blue", 3), ("dotted black", 4)]
-                .iter()
-                .cloned()
-                .collect()
-        )]
-        .iter()
-        .cloned()
-        .collect()
-    );
-    assert_eq!(
-        parse_line(&input[6]),
-        [(
-            "vibrant plum",
-            [("faded blue", 5), ("dotted black", 6)]
-                .iter()
-                .cloned()
-                .collect()
-        )]
-        .iter()
-        .cloned()
-        .collect()
-    );
-    assert_eq!(
-        parse_line(&input[7]),
-        [("faded blue", empty_hashmap.clone())]
-            .iter()
-            .cloned()
-            .collect()
-    );
-    assert_eq!(
         parse_line(&input[8]),
-        [("dotted black", empty_hashmap.clone())]
-            .iter()
-            .cloned()
-            .collect()
+        [("dotted black", empty_hashmap)].iter().cloned().collect()
     );
 
     assert_eq!(is_in_bag("shiny gold", "bright white", &bag_map), true);
@@ -207,6 +146,15 @@ dotted black bags contain no other bags.";
 
     assert_eq!(run(&input, TaskOfDay::First), 4);
 
+    assert_eq!(count_sub_bags("shiny gold", &bag_map), 32);
+
+    assert_eq!(count_sub_bags("vibrant plum", &bag_map), 11);
+    assert_eq!(count_sub_bags("dark olive", &bag_map), 7);
+
+    assert_eq!(count_sub_bags("faded blue", &bag_map), 0);
+    assert_eq!(count_sub_bags("dotted black", &bag_map), 0);
+
+    assert_eq!(run(&input, TaskOfDay::Second), 32);
     let input2_str = "shiny gold bags contain 2 dark red bags.
 dark red bags contain 2 dark orange bags.
 dark orange bags contain 2 dark yellow bags.
@@ -214,6 +162,7 @@ dark yellow bags contain 2 dark green bags.
 dark green bags contain 2 dark blue bags.
 dark blue bags contain 2 dark violet bags.
 dark violet bags contain no other bags.";
+    let input2: Vec<String> = input2_str.split("\n").map(|s| s.to_string()).collect();
 
-    assert_eq!(run(&input, TaskOfDay::Second), 126);
+    assert_eq!(run(&input2, TaskOfDay::Second), 126);
 }
