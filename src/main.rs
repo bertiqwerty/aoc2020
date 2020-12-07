@@ -11,7 +11,7 @@ mod day5;
 mod day6;
 use common::TaskOfDay;
 
-fn read_file_with_blank_lines(path: &String) -> Vec<String> {
+fn read_file_with_blank_lines(path: &str) -> Vec<String> {
     let res: Vec<String> = fs::read_to_string(path)
         .expect("Could not read file.")
         .split("\n")

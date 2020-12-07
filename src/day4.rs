@@ -56,7 +56,7 @@ fn validator_part_2(passport: &&String) -> bool {
         .split(" ")
         .filter(|s| {
             let (key, value) = split_in2_tuple(s, ":");
-            match key.as_str() {
+            match key {
                 "byr" => in_between(&value, 1920, 2002, 4),
                 "iyr" => in_between(&value, 2010, 2020, 4),
                 "eyr" => in_between(&value, 2020, 2030, 4),

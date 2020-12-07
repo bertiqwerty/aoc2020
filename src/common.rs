@@ -5,8 +5,8 @@ pub enum TaskOfDay {
     Second,
 }
 
-pub fn split_in2_tuple(s_: &str, ssplit: &str) -> (String, String) {
-    let mut splt = s_.split(ssplit).map(|s| s.trim().to_string());
+pub fn split_in2_tuple<'a>(to_be_split: &'a str, splitter: &str) -> (&'a str, &'a str) {
+    let mut splt = to_be_split.split(splitter).map(|s| s.trim());
     (splt.next().unwrap(), splt.next().unwrap())
 }
 
