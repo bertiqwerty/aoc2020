@@ -11,7 +11,7 @@ fn sum_of_steps(tree_matrix: &Vec<Vec<i32>>, row_step: usize, col_step: usize) -
     sum
 }
 
-pub fn day3(input: &Vec<String>, part: TaskOfDay) -> i64 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i64 {
     let tree_matrix = input
         .iter()
         .map(|s| s.chars().map(|c| (c == '#') as i32).collect::<Vec<i32>>())

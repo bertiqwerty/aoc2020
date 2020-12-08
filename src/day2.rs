@@ -1,7 +1,7 @@
 use super::common::TaskOfDay;
 use super::common::split_in2_tuple;
 
-pub fn day2(input: &Vec<String>, part: TaskOfDay) -> i32 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     input
         .iter()
         .filter(|s| {

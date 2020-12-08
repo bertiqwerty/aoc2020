@@ -70,7 +70,7 @@ fn validator_part_2(passport: &&String) -> bool {
         .count() == 7
 }
 
-pub fn day4(input: &Vec<String>, part: TaskOfDay) -> i32 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     let passports: Vec<String> = separate_by_blanks(input, " ");
     match part {
         TaskOfDay::First => passports.iter().filter(validator_part_1).count() as i32,

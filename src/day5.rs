@@ -15,7 +15,7 @@ fn get_id(binary_string: &str) -> i32 {
     parse_binary(row, 'B') * 8 + parse_binary(col, 'R')
 }
 
-pub fn day5(input: &Vec<String>, part: TaskOfDay) -> i32 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     match part {
         TaskOfDay::First => input.iter().map(|s| get_id(s)).max().unwrap(),
         TaskOfDay::Second => {

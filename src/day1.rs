@@ -1,6 +1,6 @@
 use super::common::TaskOfDay;
 
-pub fn day1(input: &Vec<String>, part: TaskOfDay) -> i32 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     let converted = input
         .iter()
         .map(|s| s.parse::<i32>().expect("could not parse string to int {}"));

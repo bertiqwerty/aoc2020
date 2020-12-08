@@ -19,7 +19,7 @@ fn num_chars_in_all_splits(s: &str) -> i32 {
         .count() as i32
 }
 
-pub fn day6(input: &Vec<String>, part: TaskOfDay) -> i32 {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> i32 {
     match part {
         TaskOfDay::First => separate_by_blanks(input, "")
             .iter()
@@ -48,6 +48,6 @@ fn test() {
         "abc", "", "a", "b", "c", "", "ab", "ac", "", "a", "a", "a", "a", "", "b", "",
     ];
     let input = tmp.iter().map(|elt| elt.to_string()).collect();
-    assert_eq!(day6(&input, TaskOfDay::First), 11);
-    assert_eq!(day6(&input, TaskOfDay::Second), 6);
+    assert_eq!(run(&input, TaskOfDay::First), 11);
+    assert_eq!(run(&input, TaskOfDay::Second), 6);
 }
