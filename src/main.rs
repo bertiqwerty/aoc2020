@@ -77,7 +77,6 @@ fn main() {
     print_res(run(7, day07::run));
     print_res(run(8, day08::run));
     print_res(run(9, day09::run));
-
 }
 
 #[test]
@@ -90,4 +89,5 @@ fn test() {
     assert_eq!(run_with_blank_lines(6, day06::run), (6542, 3299));
     assert_eq!(run(7, day07::run), (177, 34988));
     assert_eq!(run(8, day08::run), (1782, 797));
+    assert_eq!(run(9, day09::run), (1930745883, 268878261));   
 }
