@@ -9,9 +9,10 @@ def main():
     
     with open(intro_file, "r") as f:
         intro = f.read()
-    cargo_out = subprocess.check_output(cargo_cmd).decode("utf-8") 
+    rust_out = subprocess.check_output(cargo_cmd).decode("utf-8") 
+    print(rust_out)
     with open(readme_file, "w") as f:
-        f.write(f"{intro}\n```\n{cargo_out}```\n")
+        f.write(f"{intro}\n```\n{rust_out}```\n")
 
 
 if __name__ == "__main__":
