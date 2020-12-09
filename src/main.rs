@@ -3,14 +3,14 @@ extern crate itertools;
 use std::fs;
 use std::time::Instant;
 mod common;
-mod day1;
-mod day2;
-mod day3;
-mod day4;
-mod day5;
-mod day6;
-mod day7;
-mod day8;
+mod day01;
+mod day02;
+mod day03;
+mod day04;
+mod day05;
+mod day06;
+mod day07;
+mod day08;
 use common::TaskOfDay;
 
 fn read_file_with_blank_lines(path: &str) -> Vec<String> {
@@ -67,24 +67,24 @@ fn print_res<T: std::fmt::Display>(res: (T, T)) {
 }
 
 fn main() {
-    print_res(run(1, day1::run));
-    print_res(run(2, day2::run));
-    print_res(run(3, day3::run));
-    print_res(run_with_blank_lines(4, day4::run));
-    print_res(run(5, day5::run));
-    print_res(run_with_blank_lines(6, day6::run));
-    print_res(run(7, day7::run));
-    print_res(run(8, day8::run));
+    print_res(run(1, day01::run));
+    print_res(run(2, day02::run));
+    print_res(run(3, day03::run));
+    print_res(run_with_blank_lines(4, day04::run));
+    print_res(run(5, day05::run));
+    print_res(run_with_blank_lines(6, day06::run));
+    print_res(run(7, day07::run));
+    print_res(run(8, day08::run));
 }
 
 #[test]
 fn test() {
-    assert_eq!(run(1, day1::run), (1007331, 48914340));
-    assert_eq!(run(2, day2::run), (434, 509));
-    assert_eq!(run(3, day3::run), (247, 2983070376i64));
-    assert_eq!(run_with_blank_lines(4, day4::run), (247, 145));
-    assert_eq!(run(5, day5::run), (938, 696));
-    assert_eq!(run_with_blank_lines(6, day6::run), (6542, 3299));
-    assert_eq!(run(7, day7::run), (177, 34988));
-    assert_eq!(run(8, day8::run), (1782, 797));
+    assert_eq!(run(1, day01::run), (1007331, 48914340));
+    assert_eq!(run(2, day02::run), (434, 509));
+    assert_eq!(run(3, day03::run), (247, 2983070376i64));
+    assert_eq!(run_with_blank_lines(4, day04::run), (247, 145));
+    assert_eq!(run(5, day05::run), (938, 696));
+    assert_eq!(run_with_blank_lines(6, day06::run), (6542, 3299));
+    assert_eq!(run(7, day07::run), (177, 34988));
+    assert_eq!(run(8, day08::run), (1782, 797));
 }
