@@ -12,6 +12,7 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
+mod day10;
 use common::TaskOfDay;
 
 fn read_file_with_blank_lines(path: &str) -> Vec<String> {
@@ -67,6 +68,10 @@ fn print_res<T: std::fmt::Display>(res: (T, T)) {
     println!("{}, {}\n", res.0, res.1);
 }
 
+fn unwrap_print_res<T: std::fmt::Display>(res: (Option<T>, Option<T>)) {
+    println!("{}, {}\n", res.0.unwrap(), res.1.unwrap());
+}
+
 fn main() {
     print_res(run(1, day01::run));
     print_res(run(2, day02::run));
@@ -77,6 +82,8 @@ fn main() {
     print_res(run(7, day07::run));
     print_res(run(8, day08::run));
     print_res(run(9, day09::run));
+    unwrap_print_res(run(10, day10::run));
+
 }
 
 #[test]
@@ -89,5 +96,7 @@ fn test() {
     assert_eq!(run_with_blank_lines(6, day06::run), (6542, 3299));
     assert_eq!(run(7, day07::run), (177, 34988));
     assert_eq!(run(8, day08::run), (1782, 797));
-    assert_eq!(run(9, day09::run), (1930745883, 268878261));   
+    assert_eq!(run(9, day09::run), (1930745883, 268878261)); 
+    assert_eq!(run(10, day10::run), (Some(2738), Some(0))); 
+      
 }
