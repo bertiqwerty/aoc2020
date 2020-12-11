@@ -42,6 +42,7 @@ impl Chain {
     }
 
     fn sum_with_next(&self, idx: usize) -> Chain {
+        // E.g., 111 -> 12 for index 0 and 21 for index 1
         let new_digit = self.at(idx) + self.at(idx + 1);
         if new_digit > 3 {
             panic!("Only digits until 3 are valid.")
