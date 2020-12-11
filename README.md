@@ -1,5 +1,5 @@
 # Advent of Code 2020
-First steps in Rust. I use 
+First steps in Rust challenged by https://adventofcode.com/. I use 
 VS Code with the extensions 
 - CodeLLDB 
 - Rust Test Lens
