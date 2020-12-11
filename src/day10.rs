@@ -5,7 +5,7 @@
 //          gap array:     1, 3, 1, 1, 1, 1, 1, 3 
 //      2.) Look in the gap-array for subsequent 1s and extract all chains of this kind.
 //      3.) Count possible gap combinations per chain recursively, e.g., for 111 we have 111, 21, 12 and 3.
-//      4.) Multiply all combinations of the chain in the gap array.
+//      4.) Multiply all combinations of the different chains in the gap array.
 //
 use super::common::TaskOfDay;
 use std::collections::HashMap;
