@@ -80,41 +80,32 @@ impl Iterator for HoodIterator {
         if self.index < self.hood.len {
             self.index += 1;
             return Some(self.hood.data[self.index - 1]);
-        }
-        else {
+        } else {
             None
         }
     }
 }
+
 impl Hood {
     fn create(grid: &Grid, row: usize, col: usize) -> Hood {
-        
-        fn clamp(x: i32, lo: i32, hi: i32) -> i32 {
-            if x < lo {
-                lo
-            } else if x > hi {
-                hi
-            } else {
-                x
-            }
-        }
-
-        let mut duplicate_absorber = [(row, col); 8];
         let mut hood_len = 0;
         let mut data = [0; 8];
-        for (r, c) in iproduct!([-1, 0, 1].iter(), [-1, 0, 1].iter())
-        {
-            let ri = clamp(row as i32 + r, 0, grid.rows as i32 - 1) as usize;
-            let ci = clamp(col as i32 + c, 0, grid.cols as i32 - 1) as usize;
-            if !duplicate_absorber.contains(&(ri, ci)) {
-                duplicate_absorber[hood_len] = (ri, ci);
-                data[hood_len] = grid[ri][ci];
+        for (r, c) in iproduct!([-1, 0, 1].iter(), [-1, 0, 1].iter()) {
+            let ri = row as i32 + r;
+            let ci = col as i32 + c;
+            if ri >= 0
+                && ci >= 0
+                && ri < grid.rows as i32
+                && ci < grid.cols as i32
+                && (ri, ci) != (row as i32, col as i32)
+            {
+                data[hood_len] = grid[ri as usize][ci as usize];
                 hood_len += 1;
             }
         }
         Hood {
             data: data,
-            len: hood_len
+            len: hood_len,
         }
     }
 }
@@ -154,7 +145,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
                 new_grid = simulation_step(&prev_grid);
             }
             Some(new_grid.data.iter().filter(|v| *v == &2u8).count())
-        },
+        }
         TaskOfDay::Second => Some(0usize),
     }
 }
@@ -192,7 +183,6 @@ fn test() {
     assert_eq!(hood.clone().into_iter().collect::<HashSet<u8>>().len(), 2);
     assert_eq!(hood.into_iter().collect::<Vec<u8>>().len(), 8);
 
-
     assert_eq!(grid[0][0], 1);
     assert_eq!(grid[0][1], 0);
     assert_eq!(grid[9][9], 1);
@@ -229,7 +219,8 @@ fn test() {
     let grid_after_2_ref = Grid::from_lines(&after_2_str).unwrap();
     assert_eq!(grid_after_2_ref.data, grid_after_2.data);
 
-    let after_3_str = string_to_lines("#.##.L#.##
+    let after_3_str = string_to_lines(
+        "#.##.L#.##
     #L###LL.L#
     L.#.#..#..
     #L##.##.L#
@@ -238,12 +229,14 @@ fn test() {
     ..#.#.....
     #L######L#
     #.LL###L.L
-    #.#L###.##");
+    #.#L###.##",
+    );
     let grid_after_3 = simulation_step(&grid_after_2);
     let grid_after_3_ref = Grid::from_lines(&after_3_str).unwrap();
     assert_eq!(grid_after_3_ref.data, grid_after_3.data);
 
-    let after_4_str = string_to_lines("#.#L.L#.##
+    let after_4_str = string_to_lines(
+        "#.#L.L#.##
     #LLL#LL.L#
     L.L.L..#..
     #LLL.##.L#
@@ -252,12 +245,14 @@ fn test() {
     ..L.L.....
     #L#LLLL#L#
     #.LLLLLL.L
-    #.#L#L#.##");
+    #.#L#L#.##",
+    );
     let grid_after_4 = simulation_step(&grid_after_3);
     let grid_after_4_ref = Grid::from_lines(&after_4_str).unwrap();
     assert_eq!(grid_after_4_ref.data, grid_after_4.data);
 
-    let after_5_str = string_to_lines("#.#L.L#.##
+    let after_5_str = string_to_lines(
+        "#.#L.L#.##
     #LLL#LL.L#
     L.#.L..#..
     #L##.##.L#
@@ -266,11 +261,11 @@ fn test() {
     ..L.L.....
     #L#L##L#L#
     #.LLLLLL.L
-    #.#L#L#.##");
+    #.#L#L#.##",
+    );
     let grid_after_5 = simulation_step(&grid_after_4);
     let grid_after_5_ref = Grid::from_lines(&after_5_str).unwrap();
     assert_eq!(grid_after_5_ref.data, grid_after_5.data);
 
     assert_eq!(run(&input, TaskOfDay::First).unwrap(), 37);
-
 }
