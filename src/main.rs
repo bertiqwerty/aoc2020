@@ -13,6 +13,7 @@ mod day07;
 mod day08;
 mod day09;
 mod day10;
+mod day11;
 use common::TaskOfDay;
 
 fn read_file_with_blank_lines(path: &str) -> Vec<String> {
@@ -83,6 +84,8 @@ fn main() {
     print_res(run(8, day08::run));
     print_res(run(9, day09::run));
     unwrap_print_res(run(10, day10::run));
+    unwrap_print_res(run(11, day11::run));
+
 }
 
 #[test]
@@ -97,5 +100,6 @@ fn test() {
     assert_eq!(run(8, day08::run), (1782, 797));
     assert_eq!(run(9, day09::run), (1930745883, 268878261)); 
     assert_eq!(run(10, day10::run), (Some(2738), Some(74049191673856))); 
+    assert_eq!(run(11, day11::run), (Some(2476), Some(0))); 
       
 }
