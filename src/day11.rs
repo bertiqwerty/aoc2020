@@ -320,7 +320,4 @@ fn test() {
     let grid_after_5_ref = Grid::from_lines(&after_5_str).unwrap();
     assert_eq!(grid_after_5_ref.data, grid_after_5.data);
     assert_eq!(run(&input, TaskOfDay::Second).unwrap(), 26);
-
-
-
 }
