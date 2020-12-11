@@ -1,5 +1,4 @@
 use super::common::TaskOfDay;
-use std::collections::HashSet;
 use std::ops::{Index, IndexMut};
 
 #[derive(Clone)]
@@ -202,6 +201,8 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
 
 #[test]
 fn test() {
+    use std::collections::HashSet;
+
     fn string_to_lines(s: &str) -> Vec<String> {
         s.split("\n").map(|s| s.trim().to_string()).collect()
     }
