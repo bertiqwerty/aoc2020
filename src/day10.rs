@@ -1,7 +1,7 @@
 //
 // Task 2:
 //      1.) Create a gap array, e.g.,
-//          input:      (0), 1, 4, 5, 6, 7, 8, 9 (11)
+//          input:      (0), 1, 4, 5, 6, 7, 8, 9 (12)
 //          gap array:     1, 3, 1, 1, 1, 1, 1, 3 
 //      2.) Look in the gap-array for subsequent 1s and extract all chains of this kind.
 //      3.) Count possible gap combinations per chain recursively, e.g., for 111 we have 111, 21, 12 and 3.
