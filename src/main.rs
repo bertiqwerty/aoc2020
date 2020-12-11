@@ -83,7 +83,6 @@ fn main() {
     print_res(run(8, day08::run));
     print_res(run(9, day09::run));
     unwrap_print_res(run(10, day10::run));
-
 }
 
 #[test]
@@ -97,6 +96,6 @@ fn test() {
     assert_eq!(run(7, day07::run), (177, 34988));
     assert_eq!(run(8, day08::run), (1782, 797));
     assert_eq!(run(9, day09::run), (1930745883, 268878261)); 
-    assert_eq!(run(10, day10::run), (Some(2738), Some(0))); 
+    assert_eq!(run(10, day10::run), (Some(2738), Some(74049191673856))); 
       
 }
