@@ -1,36 +1,5 @@
 use super::common::TaskOfDay;
 
-#[derive(Clone)]
-struct State {
-    pos: (i32, i32),
-    facing: Cardir,
-}
-
-impl State {
-    fn move_forward(&self, steps: i32) -> State {
-        State {
-            pos: move_direction(self.pos, self.facing.clone(), steps),
-            facing: self.facing.clone(),
-        }
-    }
-
-    fn turn_left(&self, angle: i32) -> State {
-        State {
-            pos: self.pos,
-            facing: self.facing.turn_left(angle),
-        }
-    }
-    fn turn_right(&self, angle: i32) -> State {
-        State {
-            pos: self.pos,
-            facing: self.facing.turn_right(angle),
-        }
-    }
-    fn from_pos(&self, pos: (i32, i32)) -> State {
-        State {pos: pos, facing: self.facing}
-    }
-}
-
 fn move_direction(pos: (i32, i32), dir: Cardir, steps: i32) -> (i32, i32) {
     match dir {
         Cardir::E => (pos.0 + steps, pos.1),
@@ -47,6 +16,7 @@ enum Cardir {
     E,
     W,
 }
+
 fn match_angle(angle: i32, ninety: Cardir, one_eighty: Cardir, two_seventy: Cardir) -> Cardir {
     match angle {
         90 => ninety,
@@ -83,6 +53,7 @@ fn rotate_waypoint_r(wp_pos: (i32, i32), angle: i32) -> (i32, i32) {
         _ => panic!("Unknown angle {}", angle),
     };
 }
+
 fn rotate_waypoint_l(wp_pos: (i32, i32), angle: i32) -> (i32, i32) {
     return match angle {
         90 => (-wp_pos.1, wp_pos.0),
@@ -125,22 +96,25 @@ fn convert_lines(lines: &Vec<String>) -> Vec<(Action, i32)> {
 }
 
 fn compute_final_position(actions: &Vec<(Action, i32)>) -> (i32, i32) {
-    let mut state = State {
-        pos: (0, 0),
-        facing: Cardir::E,
-    };
+    let mut pos = (0, 0);
+    let mut facing = Cardir::E;
     for a in actions {
-        state = match a.0 {
-            Action::L => state.turn_left(a.1),
-            Action::R => state.turn_right(a.1),
-            Action::F => state.move_forward(a.1),
-            Action::N => state.from_pos(move_direction(state.pos, Cardir::N, a.1)),
-            Action::E => state.from_pos(move_direction(state.pos, Cardir::E, a.1)),
-            Action::W => state.from_pos(move_direction(state.pos, Cardir::W, a.1)),
-            Action::S => state.from_pos(move_direction(state.pos, Cardir::S, a.1)),
-        }
+        pos = match a.0 {
+            Action::F => move_direction(pos, facing, a.1),
+            Action::N => move_direction(pos, Cardir::N, a.1),
+            Action::E => move_direction(pos, Cardir::E, a.1),
+            Action::W => move_direction(pos, Cardir::W, a.1),
+            Action::S => move_direction(pos, Cardir::S, a.1),
+            _ => pos
+        };
+        facing = match a.0 {
+            Action::L => facing.turn_left(a.1),
+            Action::R => facing.turn_right(a.1),
+            _ => facing
+        };
+            
     }
-    state.pos
+    pos
 }
 
 fn compute_final_position2(actions: &Vec<(Action, i32)>) -> (i32, i32) {
