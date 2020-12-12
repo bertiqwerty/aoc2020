@@ -68,8 +68,6 @@ fn match_angle(angle: i32, ninety: Cardir, one_eighty:Cardir, two_seventy: Cardi
     }
 }
 
-static DIRECTIONS: [Cardir;4] = [Cardir::E, Cardir::N, Cardir::W, Cardir::S]; 
-
 impl Cardir {
     fn turn_left(self, angle: i32) -> Cardir {
         match self {
