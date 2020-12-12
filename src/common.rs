@@ -26,6 +26,7 @@ pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String>
     ).collect::<Vec<String>>()
 }
 
+#[cfg(test)]
 pub fn string_to_lines(s: &str) -> Vec<String> {
     s.split("\n").map(|s| s.trim().to_string()).collect()
 }

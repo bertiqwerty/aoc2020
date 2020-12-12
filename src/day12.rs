@@ -1,14 +1,4 @@
 use super::common::TaskOfDay;
-
-fn move_direction(pos: (i32, i32), dir: Cardir, steps: i32) -> (i32, i32) {
-    match dir {
-        Cardir::E => (pos.0 + steps, pos.1),
-        Cardir::W => (pos.0 - steps, pos.1),
-        Cardir::N => (pos.0, pos.1 + steps),
-        Cardir::S => (pos.0, pos.1 - steps),
-    }
-}
-
 #[derive(Clone, Copy)]
 enum Cardir {
     N,
@@ -61,6 +51,15 @@ fn rotate_waypoint_l(wp_pos: (i32, i32), angle: i32) -> (i32, i32) {
         270 => (wp_pos.1, -wp_pos.0),
         _ => panic!("Unknown angle {}", angle),
     };
+}
+
+fn move_direction(pos: (i32, i32), dir: Cardir, steps: i32) -> (i32, i32) {
+    match dir {
+        Cardir::E => (pos.0 + steps, pos.1),
+        Cardir::W => (pos.0 - steps, pos.1),
+        Cardir::N => (pos.0, pos.1 + steps),
+        Cardir::S => (pos.0, pos.1 - steps),
+    }
 }
 
 fn move_ship_in_wp_dir(ship_pos: (i32, i32), wp_pos: (i32, i32), steps: i32) -> (i32, i32) {
