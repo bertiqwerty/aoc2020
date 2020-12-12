@@ -15,64 +15,61 @@ python run.py
 ```
 The results will be written into the `README.md`.
 ```
-Running day 1
-Elapsed first:	0 millis
-Elapsed second:	0 millis
-1007331, 48914340
+1#07331, #8914340
 
 Running day 2
 Elapsed first:	0 millis
 Elapsed second:	0 millis
-434, 509
+4#4, 5#9
 
 Running day 3
 Elapsed first:	0 millis
-Elapsed second:	1 millis
-247, 2983070376
+Elapsed second:	2 millis
+2#7, 298307#376
 
 Running day 4
 Elapsed first:	1 millis
-Elapsed second:	504 millis
-247, 145
+Elapsed second:	589 millis
+24#, 14#
 
 Running day 5
 Elapsed first:	0 millis
 Elapsed second:	0 millis
-938, 696
+93#, #96
 
 Running day 6
 Elapsed first:	1 millis
-Elapsed second:	0 millis
-6542, 3299
+Elapsed second:	1 millis
+654#, 329#
 
 Running day 7
-Elapsed first:	14 millis
-Elapsed second:	1 millis
-177, 34988
+Elapsed first:	23 millis
+Elapsed second:	2 millis
+1#7, 349#8
 
 Running day 8
 Elapsed first:	0 millis
-Elapsed second:	4 millis
-1782, 797
+Elapsed second:	6 millis
+1#82, 79#
 
 Running day 9
 Elapsed first:	0 millis
 Elapsed second:	0 millis
-1930745883, 268878261
+19307#5883, 268#78261
 
 Running day 10
 Elapsed first:	0 millis
 Elapsed second:	0 millis
-2738, 74049191673856
+2#38, 740491#1673856
 
 Running day 11
-Elapsed first:	103 millis
-Elapsed second:	144 millis
-2476, 2257
+Elapsed first:	85 millis
+Elapsed second:	223 millis
+247#, 22#7
 
 Running day 12
 Elapsed first:	0 millis
 Elapsed second:	0 millis
-2280, 47105
+#280, 38#93
 
 ```
