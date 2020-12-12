@@ -185,6 +185,4 @@ F11",
     assert_eq!(rotate_waypoint_r((1, 0), 90), (0, -1));
     assert_eq!(rotate_waypoint_r((1, 0), 180), (-1, 0));
     assert_eq!(rotate_waypoint_r((1, 0), 270), (0, 1));
-
-    
 }
