@@ -103,6 +103,5 @@ fn test() {
     assert_eq!(run(9, day09::run), (1930745883, 268878261)); 
     assert_eq!(run(10, day10::run), (Some(2738), Some(74049191673856))); 
     assert_eq!(run(11, day11::run), (Some(2476), Some(2257))); 
-    assert_eq!(run(12, day12::run), (Some(2280), Some(2280))); 
-
+    assert_eq!(run(12, day12::run), (Some(2280), Some(38693)));
 }
