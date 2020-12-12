@@ -202,10 +202,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
 #[test]
 fn test() {
     use std::collections::HashSet;
-
-    fn string_to_lines(s: &str) -> Vec<String> {
-        s.split("\n").map(|s| s.trim().to_string()).collect()
-    }
+    use super::common::string_to_lines;
 
     let input = string_to_lines(
         "L.LL.LL.LL
