@@ -15,6 +15,7 @@ mod day09;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 use common::TaskOfDay;
 
 fn read_file_with_blank_lines(path: &str) -> Vec<String> {
@@ -87,6 +88,7 @@ fn main() {
     unwrap_print_res(run(10, day10::run));
     unwrap_print_res(run(11, day11::run));
     unwrap_print_res(run(12, day12::run));
+    unwrap_print_res(run(13, day13::run));
 
 }
 
