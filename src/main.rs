@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate itertools;
+extern crate num;
 use std::fs;
 use std::time::Instant;
 mod common;
@@ -106,4 +107,6 @@ fn test() {
     assert_eq!(run(10, day10::run), (Some(2738), Some(74049191673856))); 
     assert_eq!(run(11, day11::run), (Some(2476), Some(2257))); 
     assert_eq!(run(12, day12::run), (Some(2280), Some(38693)));
+    assert_eq!(run(13, day13::run).0, Some(3464));
+
 }
