@@ -1,65 +1,6 @@
 use super::common::TaskOfDay;
-use std::ops::{Index, IndexMut};
+use super::common::Grid;
 
-#[derive(Clone)]
-struct Grid {
-    rows: i32,
-    cols: i32,
-    data: Vec<u8>,
-}
-
-impl Index<usize> for Grid {
-    type Output = [u8];
-    fn index(&self, idx: usize) -> &Self::Output {
-        &self.data[idx * self.cols as usize..(idx + 1) * self.cols as usize]
-    }
-}
-impl IndexMut<usize> for Grid {
-    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
-        &mut self.data[idx * self.cols as usize..(idx + 1) * self.cols as usize]
-    }
-}
-impl Index<i32> for Grid {
-    type Output = [u8];
-    fn index(&self, idx: i32) -> &Self::Output {
-        &self[idx as usize]
-    }
-}
-impl IndexMut<i32> for Grid {
-    fn index_mut(&mut self, idx: i32) -> &mut Self::Output {
-        &mut self[idx as usize]
-    }
-}
-
-impl Grid {
-    fn from_lines(lines: &Vec<String>) -> Option<Grid> {
-        let lengths = lines
-            .iter()
-            .map(|line| line.chars().count())
-            .collect::<Vec<usize>>();
-        let cols = lengths.iter().min()?;
-        let rows = lines.len();
-        if cols != lengths.iter().max()? {
-            return None;
-        }
-        Some(Grid {
-            cols: *cols as i32,
-            rows: rows as i32,
-            data: lines
-                .iter()
-                .map(|line| {
-                    line.chars().map(|c| match c {
-                        '.' => 0u8,
-                        'L' => 1u8,
-                        '#' => 2u8,
-                        _ => panic!("Unknown character '{}'", c),
-                    })
-                })
-                .flatten()
-                .collect::<Vec<u8>>(),
-        })
-    }
-}
 #[derive(Clone)]
 struct Hood {
     data: [u8; 8],
@@ -95,7 +36,7 @@ impl Iterator for HoodIterator {
 }
 
 impl Hood {
-    fn create(grid: &Grid, row: i32, col: i32) -> Hood {
+    fn create(grid: &Grid<u8>, row: i32, col: i32) -> Hood {
         let mut hood_len = 0;
         let mut data = [0; 8];
         for (r, c) in iproduct!([-1, 0, 1].iter(), [-1, 0, 1].iter()) {
@@ -117,7 +58,7 @@ impl Hood {
         }
     }
 
-    fn create2(grid: &Grid, row: i32, col: i32) -> Hood {
+    fn create2(grid: &Grid<u8>, row: i32, col: i32) -> Hood {
         let (rows, cols) = (grid.rows as i32, grid.cols as i32);
         let mut hood_len = 0;
         let mut data = [0; 8];
@@ -154,12 +95,12 @@ impl Hood {
 }
 
 fn simulation_step(
-    grid: &Grid,
-    hood_creator: fn(&Grid, i32, i32) -> Hood,
+    grid: &Grid<u8>,
+    hood_creator: fn(&Grid<u8>, i32, i32) -> Hood,
     max_annoyance: usize,
-) -> Grid {
+) -> Grid<u8> {
     let mut new_grid = grid.clone();
-    for (r, c) in iproduct!(0..grid.rows, 0..grid.cols) {
+    for (r, c) in iproduct!(0..grid.rows as i32, 0..grid.cols as i32) {
         let hood = hood_creator(&grid, r as i32, c as i32);
         let hood_iter = hood.into_iter();
         new_grid[r][c as usize] = match grid[r][c as usize] {
@@ -183,7 +124,7 @@ fn simulation_step(
 
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
     let grid = Grid::from_lines(input)?;
-    type HoodCreatorType = fn(&Grid, i32, i32) -> Hood;
+    type HoodCreatorType = fn(&Grid<u8>, i32, i32) -> Hood;
     let first_create: HoodCreatorType = Hood::create;
     let second_create: HoodCreatorType = Hood::create2;
     let (hood_creator, max_annoyance) = match part {
@@ -250,7 +191,7 @@ fn test() {
          #.######.#
          #.#####.##",
     );
-    let grid_after_1_ref = Grid::from_lines(&after_1_str).unwrap();
+    let grid_after_1_ref: Grid<u8> = Grid::from_lines(&after_1_str).unwrap();
     assert_eq!(grid_after_1_ref.data, grid_after_1.data);
 
     let after_2_str = string_to_lines(
@@ -266,7 +207,7 @@ fn test() {
          #.LLLLL.L#",
     );
     let grid_after_2 = simulation_step(&grid_after_1, Hood::create2, 5);
-    let grid_after_2_ref = Grid::from_lines(&after_2_str).unwrap();
+    let grid_after_2_ref: Grid<u8> = Grid::from_lines(&after_2_str).unwrap();
     assert_eq!(grid_after_2_ref.data, grid_after_2.data);
 
     let after_3_str = string_to_lines(
@@ -282,7 +223,7 @@ fn test() {
         #.L####.L#",
     );
     let grid_after_3 = simulation_step(&grid_after_2, Hood::create2, 5);
-    let grid_after_3_ref = Grid::from_lines(&after_3_str).unwrap();
+    let grid_after_3_ref: Grid<u8> = Grid::from_lines(&after_3_str).unwrap();
     assert_eq!(grid_after_3_ref.data, grid_after_3.data);
 
     let after_4_str = string_to_lines(
@@ -298,7 +239,7 @@ fn test() {
         #.L#LL#.L#",
     );
     let grid_after_4 = simulation_step(&grid_after_3, Hood::create2, 5);
-    let grid_after_4_ref = Grid::from_lines(&after_4_str).unwrap();
+    let grid_after_4_ref: Grid<u8> = Grid::from_lines(&after_4_str).unwrap();
     assert_eq!(grid_after_4_ref.data, grid_after_4.data);
 
     let after_5_str = string_to_lines(
@@ -314,7 +255,7 @@ fn test() {
         #.L#LL#.L#",
     );
     let grid_after_5 = simulation_step(&grid_after_4, Hood::create2, 5);
-    let grid_after_5_ref = Grid::from_lines(&after_5_str).unwrap();
+    let grid_after_5_ref: Grid<u8> = Grid::from_lines(&after_5_str).unwrap();
     assert_eq!(grid_after_5_ref.data, grid_after_5.data);
     assert_eq!(run(&input, TaskOfDay::Second).unwrap(), 26);
 }
