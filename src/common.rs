@@ -1,6 +1,7 @@
-use std::iter;
-use std::ops::{Index, IndexMut};
 use num::Num;
+use std::iter;
+use std::fmt;
+use std::ops::{Index, IndexMut};
 pub enum TaskOfDay {
     First,
     Second,
@@ -45,80 +46,71 @@ pub enum Axis {
 #[derive(Clone, Copy)]
 pub struct AxisIterator<'a, T> {
     grid: &'a Grid<T>,
-    row_idx: usize,
-    col_idx: usize,
-    row_step: isize,
-    col_step: isize,
+    start: usize,
+    end: usize,
+    step: usize,
     axis: Axis,
+    axis_idx: usize,
 }
 
 impl<'a, T> AxisIterator<'a, T> {
-    pub fn make_row_forward(row: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T>{
+    pub fn make_row(row: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T> {
         return AxisIterator {
             grid: grid,
-            row_idx: row,
-            col_idx: 0,
-            row_step: 1,
-            col_step: 0,
+            start: 0,
+            end: grid.cols,
+            step: 1,
             axis: Axis::Row,
-        }
+            axis_idx: row,
+        };
     }
-    pub fn make_col_forward(col: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T>{
+    pub fn make_col(col: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T> {
         return AxisIterator {
             grid: grid,
-            row_idx: 0,
-            col_idx: col,
-            row_step: 0,
-            col_step: 1,
+            start: 0,
+            end: grid.rows,
+            step: 1,
             axis: Axis::Col,
-        }
-    }
-    pub fn make_row_backward(row: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T>{
-        return AxisIterator {
-            grid: grid,
-            row_idx: row,
-            col_idx: grid.cols - 1,
-            row_step: 0,
-            col_step: -1,
-            axis: Axis::Row,
-        }
-    }
-    pub fn make_col_backward(col: usize, grid: &'a Grid<T>) -> AxisIterator<'a, T>{
-        return AxisIterator {
-            grid: grid,
-            row_idx: grid.rows - 1,
-            col_idx: col,
-            row_step: -1,
-            col_step: 0,
-            axis: Axis::Col,
-        }
+            axis_idx: col,
+        };
     }
 }
 
 impl<'a, T> Iterator for AxisIterator<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None;
+        }
         match self.axis {
             Axis::Col => {
-                if self.row_idx < self.grid.rows - 1 && self.row_idx > 0 {
-                    self.row_idx = (self.row_idx as isize + self.row_step) as usize;
-                    return Some(&self.grid[self.row_idx][self.col_idx]);
-                } else {
-                    None
-                }
-            },
+                self.start += self.step;
+                Some(&self.grid[self.start - self.step][self.axis_idx])
+            }
             Axis::Row => {
-                if self.col_idx < self.grid.cols - 1 && self.col_idx > 0 {
-                    self.col_idx = (self.col_idx as isize + self.col_step) as usize;
-                    return Some(&self.grid[self.row_idx][self.col_idx]);
-                } else {
-                    None
-                }
-            },          
+                self.start += self.step;
+                Some(&self.grid[self.axis_idx][self.start - self.step])
+            }
         }
     }
 }
-
+impl<'a, T> DoubleEndedIterator for AxisIterator<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            return None;
+        }
+        match self.axis {
+            Axis::Col => {
+                self.end -= self.step;
+                Some(&self.grid[self.end][self.axis_idx])
+            }
+            Axis::Row => {
+                self.end -= self.step;
+                Some(&self.grid[self.axis_idx][self.end])
+            }
+        }
+    }
+}
 
 impl<T: Num> Grid<T> {
     pub fn from_lines(lines: &[String]) -> Option<Grid<T>> {
@@ -150,13 +142,24 @@ impl<T: Num> Grid<T> {
     }
 }
 
+pub fn print_grid<T: fmt::Display>(grid: &Grid<T>) {
+
+    for r in 0usize..grid.rows {
+        for c in 0usize..grid.cols {
+            let val = &grid[r][c];
+            print!("{} ", val.to_string());
+        }
+        println!();
+    }
+    
+}
+
 pub fn split_in2_tuple<'a>(to_be_split: &'a str, splitter: &str) -> (&'a str, &'a str) {
     let mut splt = to_be_split.split(splitter).map(|s| s.trim());
     (splt.next().unwrap(), splt.next().unwrap())
 }
 
-pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String>
-{
+pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String> {
     // TODO: currently, last element of input must be a blank line/string
     let split_positions = input
         .iter()
@@ -165,10 +168,12 @@ pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String>
         .map(|t: (usize, &String)| t.0)
         .collect::<Vec<usize>>();
     let splits_shifted = &split_positions[1..];
-    iter::once(input[0..split_positions[0]].join(joiner)).chain(
-        izip!(&split_positions, splits_shifted)
-            .map(|t| input[t.0.clone() + 1..t.1.clone()].join(joiner)),
-    ).collect::<Vec<String>>()
+    iter::once(input[0..split_positions[0]].join(joiner))
+        .chain(
+            izip!(&split_positions, splits_shifted)
+                .map(|t| input[t.0.clone() + 1..t.1.clone()].join(joiner)),
+        )
+        .collect::<Vec<String>>()
 }
 
 pub fn string_to_lines(s: &str) -> Vec<String> {

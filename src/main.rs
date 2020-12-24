@@ -93,6 +93,7 @@ fn main() {
     unwrap_print_res(run(12, day12::run));
     unwrap_print_res(run(13, day13::run));
     unwrap_print_res(run(14, day14::run));
+    unwrap_print_res(run_with_blank_lines(20, day20::run));
 
 }
 
