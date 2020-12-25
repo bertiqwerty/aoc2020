@@ -120,6 +120,19 @@ fn match_node(node1: &Node, node2: &Node, node1_dir: Dir, node1_ori: Dir) -> Opt
     None
 }
 
+fn get_corners(nodes: &HashMap<i32, (Node, Dir)>) -> Vec<i32> {
+    nodes.iter().filter(|(id, (node, _))| {
+        let border_sides = node.n.is_none() as u8
+            + node.e.is_none() as u8
+            + node.s.is_none() as u8
+            + node.w.is_none() as u8;
+        if border_sides > 2 {
+            panic!("More than 2 border sides are not possible. Found {} for id {}.", border_sides, id);
+        }
+        border_sides == 2      
+    }).map(|(id, _)| *id).collect::<Vec<i32>>()
+}
+
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     let input_grids = separate_by_blanks(&input, "\n");
     let mut nodes = input_grids
@@ -162,26 +175,16 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
             fixeds.push(item);
         }
     }
-    let corner_iter = nodes.iter().filter(|(id, (node, _))| {
-        let border_sides = node.n.is_none() as u8
-            + node.e.is_none() as u8
-            + node.s.is_none() as u8
-            + node.w.is_none() as u8;
-        if border_sides > 2 {
-            panic!("More than 2 border sides are not possible. Found {} for id {}.", border_sides, id);
+    let corners = get_corners(&nodes);
+    if corners.clone().len() != 4 {
+        for corner in &corners {
+            println!("orientation {:?}", nodes[corner].1);
+            println!("{:?}", &nodes[corner].0);
         }
-        border_sides == 2
-            
-    });
-    if corner_iter.clone().count() != 4 {
-        for corner in corner_iter.clone() {
-            println!("orientation {:?}", corner.1.1);
-            println!("{:?}", &corner.1.0);
-        }
-        panic!("We have exactly 4 corners not {}.", corner_iter.clone().count())
+        panic!("We have exactly 4 corners not {}.", corners.clone().len())
     }
 
-    Some(corner_iter.map(|(id, _)| *id as u64).product())
+    Some(corners.iter().map(|id| *id as u64).product())
 }
 
 
@@ -344,6 +347,8 @@ fn test_day_20() {
     assert!(match_node(&node_2311, &node_3079, Dir::S, Dir::N).is_none());
     assert!(match_node(&node_2311, &node_3079, Dir::W, Dir::N).is_none());
 
-
     assert_eq!(run(&input, TaskOfDay::First), Some(20899048083289));
+
+    // let tst = grid_2311.1[0..5][0..5];
+
 }

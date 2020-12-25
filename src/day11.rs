@@ -48,7 +48,7 @@ impl Hood {
                 && ci < grid.cols as i32
                 && (ri, ci) != (row, col)
             {
-                data[hood_len] = grid[ri][ci as usize];
+                data[hood_len] = grid[ri as usize][ci as usize];
                 hood_len += 1;
             }
         }
@@ -69,7 +69,7 @@ impl Hood {
                 && col + (c * scale) >= 0
                 && row + (r * scale) < rows
                 && col + (c * scale) < cols
-                && grid[row + (r * scale)][(col + (c * scale)) as usize] == 0
+                && grid[(row + (r * scale)) as usize][(col + (c * scale)) as usize] == 0
             {
                 scale += 1;
             }
@@ -81,9 +81,9 @@ impl Hood {
                 && ri < rows
                 && ci < cols
                 && (ri, ci) != (row, col)
-                && grid[ri][ci as usize] > 0
+                && grid[ri as usize][ci as usize] > 0
             {
-                data[hood_len] = grid[ri][ci as usize];
+                data[hood_len] = grid[ri as usize][ci as usize];
                 hood_len += 1;
             }
         }
@@ -101,9 +101,9 @@ fn simulation_step(
 ) -> Grid<u8> {
     let mut new_grid = grid.clone();
     for (r, c) in iproduct!(0..grid.rows as i32, 0..grid.cols as i32) {
-        let hood = hood_creator(&grid, r as i32, c as i32);
+        let hood = hood_creator(&grid, r, c);
         let hood_iter = hood.into_iter();
-        new_grid[r][c as usize] = match grid[r][c as usize] {
+        new_grid[r as usize][c as usize] = match grid[r as usize][c as usize] {
             0 => 0,
             1 => match hood_iter.clone().filter(|v| *v == 2).count() {
                 0 => 2,
@@ -116,7 +116,7 @@ fn simulation_step(
                     1
                 }
             }
-            _ => panic!("Unknown grid value {}", grid[r][c as usize]),
+            _ => panic!("Unknown grid value {}", grid[r as usize][c as usize]),
         };
     }
     new_grid
@@ -172,10 +172,10 @@ fn test() {
     assert_eq!(hood.clone().into_iter().collect::<HashSet<u8>>().len(), 2);
     assert_eq!(hood.into_iter().collect::<Vec<u8>>().len(), 8);
 
-    assert_eq!(grid[0i32][0], 1);
-    assert_eq!(grid[0i32][1], 0);
-    assert_eq!(grid[9i32][9], 1);
-    assert_eq!(grid[3i32][4], 0);
+    assert_eq!(grid[0][0], 1);
+    assert_eq!(grid[0][1], 0);
+    assert_eq!(grid[9][9], 1);
+    assert_eq!(grid[3][4], 0);
     assert_eq!(run(&input, TaskOfDay::First).unwrap(), 37);
 
     let grid_after_1 = simulation_step(&grid, Hood::create2, 5);

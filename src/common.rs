@@ -1,5 +1,5 @@
-use num::Num;
-use std::fmt;
+use num::{Integer, Num};
+use std::{fmt, ops::Range};
 use std::iter;
 use std::ops::{Index, IndexMut};
 pub enum TaskOfDay {
@@ -25,17 +25,7 @@ impl<T> IndexMut<usize> for Grid<T> {
         &mut self.data[idx * self.cols as usize..(idx + 1) * self.cols as usize]
     }
 }
-impl<T> Index<i32> for Grid<T> {
-    type Output = [T];
-    fn index(&self, idx: i32) -> &Self::Output {
-        &self[idx as usize]
-    }
-}
-impl<T> IndexMut<i32> for Grid<T> {
-    fn index_mut(&mut self, idx: i32) -> &mut Self::Output {
-        &mut self[idx as usize]
-    }
-}
+
 
 #[derive(Clone, Copy)]
 pub enum Axis {
