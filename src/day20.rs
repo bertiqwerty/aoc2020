@@ -1,5 +1,3 @@
-use crate::common::print_grid;
-
 use super::common::separate_by_blanks;
 use super::common::AxisIterator;
 use super::common::Grid;
@@ -44,7 +42,7 @@ fn resolve_orientation<T>(orientation: Dir, dir: Dir, results: (T, T, T, T)) -> 
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Node {
     id: i32,
     grid: Grid<u8>,
@@ -52,15 +50,6 @@ struct Node {
     e: Option<i32>,
     s: Option<i32>,
     w: Option<i32>,
-}
-
-fn print_node(node: &Node) {
-    println!("id: {}", node.id);
-    println!("n: {}", node.n.unwrap_or(-1));
-    println!("e: {}", node.e.unwrap_or(-1));
-    println!("s: {}", node.s.unwrap_or(-1));
-    println!("w: {}", node.w.unwrap_or(-1));
-    
 }
 
 impl Node {
@@ -186,9 +175,8 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     });
     if corner_iter.clone().count() != 4 {
         for corner in corner_iter.clone() {
-            println!("corner {}", corner.0);
             println!("orientation {:?}", corner.1.1);
-            print_node(&corner.1.0);
+            println!("{:?}", &corner.1.0);
         }
         panic!("We have exactly 4 corners not {}.", corner_iter.clone().count())
     }
@@ -330,6 +318,7 @@ fn test_day_20() {
     let grid_1489 = grids.iter().find(|(i, _)| *i == 1489).unwrap();
     let grid_1951 = grids.iter().find(|(i, _)| *i == 1951).unwrap();
     let node_1489 = Node::from_grid(grid_1489.0, grid_1489.1.clone());
+    println!("{:#?}", node_1489);
     let node_1951 = Node::from_grid(grid_1951.0, grid_1951.1.clone());
     let ori_n_dir_w_1489= node_1489.get_axis_iter(Dir::W, Dir::N);
     let ori_w_dir_e_1951= node_1951.get_axis_iter(Dir::W, Dir::W.invert());

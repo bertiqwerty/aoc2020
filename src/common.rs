@@ -1,6 +1,6 @@
 use num::Num;
-use std::iter;
 use std::fmt;
+use std::iter;
 use std::ops::{Index, IndexMut};
 pub enum TaskOfDay {
     First,
@@ -142,16 +142,19 @@ impl<T: Num> Grid<T> {
     }
 }
 
-pub fn print_grid<T: fmt::Display>(grid: &Grid<T>) {
-
-    for r in 0usize..grid.rows {
-        for c in 0usize..grid.cols {
-            let val = &grid[r][c];
-            print!("{} ", val.to_string());
+impl<T: fmt::Debug> fmt::Debug for Grid<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut res = format!("rows {}, cols {}\n", self.rows, self.cols);
+        for r in 0usize..self.rows {
+            for c in 0usize..self.cols {
+                let val = &self[r][c];
+                let formatted = format!("{:?} ", val);
+                res.push_str(&formatted);
+            }
+            res.push_str("\n");
         }
-        println!();
+        fmt::Display::fmt(&format!("{}", res), f)
     }
-    
 }
 
 pub fn split_in2_tuple<'a>(to_be_split: &'a str, splitter: &str) -> (&'a str, &'a str) {
