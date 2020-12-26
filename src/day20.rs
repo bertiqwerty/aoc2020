@@ -101,26 +101,33 @@ fn str_to_id_grid(s: &str) -> Option<(i32, Grid<u8>)> {
     Some((id, grid))
 }
 
-fn match_axis(iter1: &AxisIterator<u8>, iter2: &AxisIterator<u8>) -> bool {
-    let res = izip!(iter1.clone(), iter2.clone()).all(|(i1, i2)| i1 == i2);
-    let res_rev = izip!(iter1.clone().rev(), iter2.clone()).all(|(i1, i2)| i1 == i2);
-    res || res_rev
+fn match_axis(iter1: &AxisIterator<u8>, iter2: &AxisIterator<u8>) -> Option<bool> {
+    if izip!(iter1.clone(), iter2.clone()).all(|(i1, i2)| i1 == i2){
+        Some(false)
+    }
+    else if izip!(iter1.clone().rev(), iter2.clone()).all(|(i1, i2)| i1 == i2) {
+        Some(true)
+    }
+    else {
+        None
+    }
 }
 
-fn match_node(node1: &Node, node2: &Node, node1_dir: Dir, node1_ori: Dir) -> Option<Dir> {
+fn match_node(node1: &Node, node2: &Node, node1_dir: Dir, node1_ori: Dir) -> Option<Geometry> {
     // returns orientation
     let iters1 = node1.get_axis_iter(node1_ori, node1_dir);
 
     for node_2_ori in ALL_DIRS.iter() {
         let iters2 = node2.get_axis_iter(*node_2_ori, node1_dir.invert());
-        if match_axis(&iters1, &iters2) {
-            return Some(*node_2_ori);
+        let flipped = match_axis(&iters1, &iters2);
+        if flipped.is_some() {
+            return Some(Geometry{ori: *node_2_ori, flipped: flipped?});
         }
     }
     None
 }
 
-fn get_corners(nodes: &HashMap<i32, (Node, Dir)>) -> Vec<i32> {
+fn get_corners(nodes: &HashMap<i32, (Node, Geometry)>) -> Vec<i32> {
     nodes.iter().filter(|(id, (node, _))| {
         let border_sides = node.n.is_none() as u8
             + node.e.is_none() as u8
@@ -132,6 +139,11 @@ fn get_corners(nodes: &HashMap<i32, (Node, Dir)>) -> Vec<i32> {
         border_sides == 2      
     }).map(|(id, _)| *id).collect::<Vec<i32>>()
 }
+#[derive(Clone, Copy)]
+struct Geometry {
+    flipped: bool,
+    ori: Dir,
+}
 
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     let input_grids = separate_by_blanks(&input, "\n");
@@ -139,9 +151,9 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
         .iter()
         .map(|s| {
             let (id, grid) = str_to_id_grid(s).unwrap();
-            (id, (Node::from_grid(id, grid), Dir::N))
+            (id, (Node::from_grid(id, grid),  Geometry {flipped: false, ori: Dir::N}))
         })
-        .collect::<HashMap<i32, (Node, Dir)>>();
+        .collect::<HashMap<i32, (Node, Geometry)>>();
 
     let mut floatings = nodes.keys().map(|id| *id).collect::<Vec<i32>>();
     let mut fixeds: Vec<i32> = Vec::with_capacity(0);
@@ -152,20 +164,20 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
         for (flo, fix) in iproduct!(&floatings, &fixeds) {
             let relevant_ori = ALL_DIRS
                 .iter()
-                .filter(|dir| nodes[fix].0.get_neighbor(nodes[fix].1, **dir).is_none())
+                .filter(|dir| nodes[fix].0.get_neighbor(nodes[fix].1.ori, **dir).is_none())
                 .map(|n1_dir| {
                     (
                         n1_dir,
-                        match_node(&nodes[fix].0, &nodes[flo].0, *n1_dir, nodes[fix].1),
+                        match_node(&nodes[fix].0, &nodes[flo].0, *n1_dir, nodes[fix].1.ori),
                     )
                 })
                 .find(|(_, n2_ori)| n2_ori.is_some());
 
             for (n1_dir, n2_ori) in relevant_ori {
-                let n1_ori = nodes[fix].1;
+                let n1_ori = nodes[fix].1.ori;
                 let n2_dir = n1_dir.invert();
                 nodes.get_mut(fix)?.0.set_neighbor(n1_ori, *n1_dir, *flo);
-                nodes.get_mut(flo)?.0.set_neighbor(n2_ori?, n2_dir, *fix);
+                nodes.get_mut(flo)?.0.set_neighbor(n2_ori?.ori, n2_dir, *fix);
                 nodes.get_mut(flo)?.1 = n2_ori?;
                 to_be_moved.push(*flo);
             }
@@ -178,7 +190,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     let corners = get_corners(&nodes);
     if corners.clone().len() != 4 {
         for corner in &corners {
-            println!("orientation {:?}", nodes[corner].1);
+            println!("orientation {:?}", nodes[corner].1.ori);
             println!("{:?}", &nodes[corner].0);
         }
         panic!("We have exactly 4 corners not {}.", corners.clone().len())
@@ -314,9 +326,9 @@ fn test_day_20() {
     // 4 south matches 3 north
     let it4north: AxisIterator<u8> = AxisIterator::make_row(grids[4].1.rows - 1, &grids[4].1);
     let it3south: AxisIterator<u8> = AxisIterator::make_row(0, &grids[3].1);
-    assert!(match_axis(&it4north, &it3south));
+    assert!(match_axis(&it4north, &it3south).is_some());
     let it31: AxisIterator<u8> = AxisIterator::make_row(1, &grids[3].1);
-    assert!(!match_axis(&it4north, &it31));
+    assert!(!match_axis(&it4north, &it31).is_some());
 
     let grid_1489 = grids.iter().find(|(i, _)| *i == 1489).unwrap();
     let grid_1951 = grids.iter().find(|(i, _)| *i == 1951).unwrap();
@@ -325,7 +337,7 @@ fn test_day_20() {
     let node_1951 = Node::from_grid(grid_1951.0, grid_1951.1.clone());
     let ori_n_dir_w_1489= node_1489.get_axis_iter(Dir::W, Dir::N);
     let ori_w_dir_e_1951= node_1951.get_axis_iter(Dir::W, Dir::W.invert());
-    assert!(!match_axis(&ori_n_dir_w_1489, &ori_w_dir_e_1951));
+    assert!(!match_axis(&ori_n_dir_w_1489, &ori_w_dir_e_1951).is_some());
     assert!(match_node(&node_1489, &node_1951, Dir::N, Dir::N).is_none());
     assert!(match_node(&node_1489, &node_1951, Dir::E, Dir::N).is_none());
     assert!(match_node(&node_1489, &node_1951, Dir::S, Dir::N).is_none());

@@ -114,7 +114,7 @@ fn regression_tests() {
     assert_eq!(run(12, day12::run), (Some(2280), Some(38693)));
     assert_eq!(run(13, day13::run), (Some(3464), Some(760171380521445)));
     assert_eq!(run(14, day14::run), (Some(11612740949946), Some(3394509207186)));
-    assert_eq!(run_with_blank_lines(14, day14::run), (Some(111936085519519), Some(111936085519519)));
+    assert_eq!(run_with_blank_lines(20, day20::run), (Some(111936085519519), Some(111936085519519)));
 
 
 }
