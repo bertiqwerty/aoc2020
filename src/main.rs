@@ -4,6 +4,7 @@ extern crate num;
 use std::fs;
 use std::time::Instant;
 mod common;
+mod grid;
 mod day01;
 mod day02;
 mod day03;

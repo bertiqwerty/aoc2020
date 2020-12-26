@@ -1,5 +1,5 @@
 use super::common::TaskOfDay;
-use super::common::Grid;
+use super::grid::Grid;
 
 #[derive(Clone)]
 struct Hood {

@@ -1,6 +1,6 @@
 use super::common::separate_by_blanks;
-use super::common::AxisIterator;
-use super::common::Grid;
+use super::grid::AxisIterator;
+use super::grid::Grid;
 
 use super::common::string_to_lines;
 use super::common::TaskOfDay;
