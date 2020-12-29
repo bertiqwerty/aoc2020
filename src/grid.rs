@@ -2,14 +2,14 @@ use num::Num;
 use std::ops::{Index, IndexMut};
 use std::{fmt, ops::Range};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Grid<T: num::Num> {
     pub rows: usize,
     pub cols: usize,
     pub data: Vec<T>,
 }
 
-impl<'a, T: Num + Clone + Copy> Grid<T> {
+impl<'a, T: Num + Clone + Copy + fmt::Debug> Grid<T> {
     pub fn view(&'a self, row_range: Range<usize>, col_range: Range<usize>) -> GridView<'a, T> {
         GridView {
             row_start: row_range.start,
@@ -20,57 +20,74 @@ impl<'a, T: Num + Clone + Copy> Grid<T> {
         }
     }
     pub fn rot90(&self) -> Self {
-        let mut res: Self = Grid{  rows: self.cols, cols: self.rows, data:vec![T::zero(); self.rows*self.cols]};
+        let mut res: Self = Grid {
+            rows: self.cols,
+            cols: self.rows,
+            data: vec![T::zero(); self.rows * self.cols],
+        };
         for r in 0..self.rows {
             for c in 0..self.cols {
-                res[self.cols-1-c][r] = self[r][c];
+                res[self.cols - 1 - c][r] = self[r][c];
             }
         }
         res
     }
     pub fn rot180(&self) -> Self {
-        let mut res: Self = Grid{  rows: self.rows, cols: self.cols, data:vec![T::zero(); self.rows*self.cols]};
+        let mut res: Self = Grid {
+            rows: self.rows,
+            cols: self.cols,
+            data: vec![T::zero(); self.rows * self.cols],
+        };
         for r in 0..self.rows {
             for c in 0..self.cols {
-                res[self.rows-1-r][self.cols-1-c] = self[r][c];
+                res[self.rows - 1 - r][self.cols - 1 - c] = self[r][c];
             }
         }
         res
     }
 
     pub fn rot270(&self) -> Self {
-        let mut res: Self = Grid{  rows: self.cols, cols: self.rows, data:vec![T::zero(); self.rows*self.cols]};
+        let mut res: Self = Grid {
+            rows: self.cols,
+            cols: self.rows,
+            data: vec![T::zero(); self.rows * self.cols],
+        };
         for r in 0..self.rows {
             for c in 0..self.cols {
-                res[c][self.rows-1-r] = self[r][c];
+                res[c][self.rows - 1 - r] = self[r][c];
             }
         }
         res
     }
     pub fn flipud(&self) -> Self {
-        let mut res: Self = Grid{  rows: self.rows, cols: self.cols, data:vec![T::zero(); self.rows*self.cols]};
+        let mut res: Self = Grid {
+            rows: self.rows,
+            cols: self.cols,
+            data: vec![T::zero(); self.rows * self.cols],
+        };
         for r in 0..self.rows {
             for c in 0..self.cols {
-                res[self.rows-1-r][c] = self[r][c];
+                res[self.rows - 1 - r][c] = self[r][c];
             }
         }
         res
     }
     pub fn fliplr(&self) -> Self {
-        let mut res: Self = Grid{  rows: self.rows, cols: self.cols, data:vec![T::zero(); self.rows*self.cols]};
+        let mut res: Self = Grid {
+            rows: self.rows,
+            cols: self.cols,
+            data: vec![T::zero(); self.rows * self.cols],
+        };
         for r in 0..self.rows {
             for c in 0..self.cols {
-                res[r][self.cols-1-c] = self[r][c];
+                res[r][self.cols - 1 - c] = self[r][c];
             }
         }
         res
     }
-
 }
 
-
-
-pub struct GridView<'a, T: Num> {
+pub struct GridView<'a, T: Num + Clone + fmt::Debug> {
     pub row_start: usize,
     pub col_start: usize,
     pub row_end: usize,
@@ -78,7 +95,7 @@ pub struct GridView<'a, T: Num> {
     pub grid: &'a Grid<T>,
 }
 
-impl<'a, T: Num> Index<usize> for GridView<'a, T> {
+impl<'a, T: Num + Clone + fmt::Debug> Index<usize> for GridView<'a, T> {
     type Output = [T];
     fn index(&self, idx: usize) -> &Self::Output {
         let shifted_idx = idx + self.row_start;
@@ -86,13 +103,17 @@ impl<'a, T: Num> Index<usize> for GridView<'a, T> {
             [self.col_start..self.col_end]
     }
 }
-impl<'a, T: Num> GridView<'a, T> {
-    fn rows(&self) -> usize {
+
+
+
+impl<'a, T: Num + Clone + fmt::Debug> GridView<'a, T> {
+    pub fn rows(&self) -> usize {
         self.row_end - self.row_start
     }
-    fn cols(&self) -> usize {
+    pub fn cols(&self) -> usize {
         self.col_end - self.col_start
     }
+
 }
 
 impl<T: num::Num> Index<usize> for Grid<T> {
@@ -153,7 +174,7 @@ impl<T: Num> Grid<T> {
     }
 }
 
-impl<'a, T: fmt::Debug + Num> fmt::Debug for GridView<'a, T> {
+impl<'a, T: fmt::Debug + Num + Clone> fmt::Debug for GridView<'a, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut res = format!("rows {}, cols {}\n", self.rows(), self.cols());
         for r in 0..self.rows() {
@@ -168,7 +189,7 @@ impl<'a, T: fmt::Debug + Num> fmt::Debug for GridView<'a, T> {
     }
 }
 
-impl<T: fmt::Debug + Num> fmt::Debug for Grid<T> {
+impl<T: Clone + fmt::Debug + Num> fmt::Debug for Grid<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         GridView {
             grid: &self,
@@ -188,7 +209,7 @@ fn start_end(start: isize, end: isize, step: isize) -> (isize, isize) {
     )
 }
 
-impl<'a, T: Num> AxisIterator<'a, T> {
+impl<'a, T: Num + Clone + fmt::Debug> AxisIterator<'a, T> {
     pub fn make_row(row: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T> {
         let (start, end) = start_end(0, grid.cols as isize, step);
         return AxisIterator {
@@ -327,7 +348,7 @@ fn test_grid() {
     for (result, reference) in izip!(col_iter, vec![11, 8, 5].iter()) {
         assert_eq!(result, reference);
     }
-    let rot_test  = Grid {
+    let rot_test = Grid {
         rows: 2,
         cols: 3,
         data: vec![1, 2, 3, 4, 5, 6],

@@ -109,7 +109,6 @@ enum MatchResult {
     SameGrid,
 }
 
-
 fn transform_grid(grid: &Grid<u8>, ori: Dir, dir: Dir, flipped: bool) -> Grid<u8> {
     let aligned = match (ori, dir) {
         (Dir::N, Dir::N) | (Dir::E, Dir::E) | (Dir::S, Dir::S) | (Dir::W, Dir::W) => grid.clone(),
@@ -125,8 +124,7 @@ fn transform_grid(grid: &Grid<u8>, ori: Dir, dir: Dir, flipped: bool) -> Grid<u8
             Dir::N | Dir::S => aligned.fliplr(),
             Dir::E | Dir::W => aligned.flipud(),
         }
-    }
-    else {
+    } else {
         aligned
     }
 }
@@ -135,7 +133,7 @@ fn match_node(
     node1: &Node,
     node2: &Node,
     node1_dir: Dir,
-    node2_grid_fixed: bool
+    node2_grid_fixed: bool,
 ) -> Option<MatchResult> {
     // returns geometry of second node if it fits
     let iters1 = node1.get_axis_iter(node1_dir);
@@ -144,7 +142,13 @@ fn match_node(
         let iters2 = node2.get_axis_iter(node2_dir);
         let unflipped_match = match_axis(&iters1, &iters2);
         return match unflipped_match {
-            Some(m) => if m {None} else {Some(MatchResult::SameGrid)},
+            Some(m) => {
+                if m {
+                    None
+                } else {
+                    Some(MatchResult::SameGrid)
+                }
+            }
             None => None,
         };
     }
@@ -152,9 +156,14 @@ fn match_node(
         let iters2 = node2.get_axis_iter(*node2_ori);
         let are_axis_matching = match_axis(&iters1, &iters2);
         if are_axis_matching.is_some() {
-            let flipped = are_axis_matching?; 
-            return Some(MatchResult::NewGrid(transform_grid(&node2.grid, *node2_ori, node2_dir, flipped)));
-        }            
+            let flipped = are_axis_matching?;
+            return Some(MatchResult::NewGrid(transform_grid(
+                &node2.grid,
+                *node2_ori,
+                node2_dir,
+                flipped,
+            )));
+        }
     }
     None
 }
@@ -192,21 +201,74 @@ fn print_hood(node_id: i32, nodes: &BTreeMap<i32, Node>) {
     println!("");
 }
 
+struct NodeIterator<'a> {
+    dir: Dir,
+    current_id: Option<i32>,
+    nodes: &'a BTreeMap<i32, Node>
+
+}
+
+impl<'a> Iterator for NodeIterator<'a> {
+    type Item = i32;
+    fn next(&mut self) -> Option<Self::Item> {
+        let res = self.current_id;
+        self.current_id = self.nodes[&self.current_id?].get_neighbor(self.dir);
+        res
+    }
+}
+
+fn node_row_iter<'a>(row_anchor: i32, nodes: &'a BTreeMap<i32, Node>) -> NodeIterator<'a> {
+    NodeIterator{dir: Dir::E, current_id:Some(row_anchor), nodes:nodes}
+}
+
+fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
+    let mut row_anchor = *nodes
+        .iter()
+        .find(|(_, n)| n.get_neighbor(Dir::N).is_none() && n.get_neighbor(Dir::W).is_none())
+        .unwrap().0;
+    print_hood(row_anchor, nodes);
+    let grids_in_a_row = node_row_iter(row_anchor, &nodes).count();
+    let grids_in_a_col = nodes.len() / grids_in_a_row; 
+    let rows_per_view = nodes[&row_anchor].grid.rows - 2;
+    let cols_per_view = nodes[&row_anchor].grid.cols - 2;
+    let res_rows = grids_in_a_row * (rows_per_view); 
+    let res_cols = grids_in_a_col * (cols_per_view);
+    let mut res: Grid<u8> = Grid {
+        rows: res_rows,
+        cols: res_cols,
+        data: vec![0; res_rows*res_cols]
+    };
+
+    let mut cur_row = 0;
+    while cur_row < grids_in_a_row {
+        let row_offset = cur_row * rows_per_view;
+        let row_iter = node_row_iter(row_anchor, &nodes);
+        for (grids_col, current_id) in row_iter.enumerate() {
+            let view = &nodes[&current_id].grid.view(1..rows_per_view+1, 1..cols_per_view+1); 
+            let col_offset = grids_col * cols_per_view;
+            for (r, c) in iproduct!(0..view.rows(), 0..view.cols()) {
+                res[row_offset + r][col_offset + c] = view[r][c];
+            }
+        }
+        row_anchor = nodes[&row_anchor].s.unwrap_or(-1);
+        cur_row += 1;
+    }
+    res
+}
+
+fn collect_nodes(grids: &Vec<String>) -> BTreeMap<i32, Node>{
+    grids
+    .iter()
+    .map(|s| {
+        let (id, grid) = str_to_id_grid(s).unwrap();
+        (id, Node::from_grid(id, grid))
+    })
+    .collect::<BTreeMap<i32, Node>>()
+}
 
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     let input_grids = separate_by_blanks(&input, "\n");
-    let mut nodes = input_grids
-        .iter()
-        .map(|s| {
-            let (id, grid) = str_to_id_grid(s).unwrap();
-            (
-                id,
-                
-                Node::from_grid(id, grid),
-                
-            )
-        })
-        .collect::<BTreeMap<i32, Node>>();
+    let mut nodes = collect_nodes(&input_grids);
 
     let mut floatings = nodes.keys().map(|id| *id).collect::<Vec<i32>>();
     let mut fixeds: Vec<i32> = Vec::with_capacity(0);
@@ -225,24 +287,23 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
                             &nodes[fix],
                             &nodes[flo],
                             *fix_dir,
-                             nodes[flo].count_neighbors() > 0
+                            nodes[flo].count_neighbors() > 0,
                         ),
                     )
                 })
                 .find(|(_, node_match)| node_match.is_some());
 
-            if flo_match.is_some(){
-            
+            if flo_match.is_some() {
                 let (fix_dir, node_match) = flo_match?;
                 let flo_dir = fix_dir.invert();
                 nodes.get_mut(fix)?.set_neighbor(*fix_dir, *flo);
                 nodes.get_mut(flo)?.set_neighbor(flo_dir, *fix);
-                let new_grid = match node_match? {  
+                let new_grid = match node_match? {
                     MatchResult::SameGrid => nodes[flo].grid.clone(),
-                    MatchResult::NewGrid(g) => g
+                    MatchResult::NewGrid(g) => g,
                 };
                 nodes.get_mut(flo)?.grid = new_grid.clone();
-                
+
                 to_be_moved.push(*flo);
             }
         }
@@ -264,13 +325,23 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
 
     match part {
         TaskOfDay::First => Some(corners.iter().map(|id| *id as u64).product()),
-        TaskOfDay::Second => Some(0u64),
+        TaskOfDay::Second => {
+                let merged_grid = merge_grids(&nodes);
+                let monster: Grid<u8> = Grid::from_lines(&vec![
+                    "..................#.".to_string(),
+                    "#....##....##....###".to_string(),
+                    ".#..#..#..#..#..#...".to_string()
+                ]).unwrap();
+                print!("{:?}",merged_grid);
+                print!("{:?}",monster);
+                
+                Some(0u64)}
+            ,
     }
 }
 
 #[test]
 fn test_day_20() {
-    
     let input = string_to_lines(
         "Tile 2311:
         ..##.#..#.
@@ -407,13 +478,16 @@ fn test_day_20() {
     assert!(match_node(&node_1489, &node_1951, Dir::E, false).is_none());
     assert!(match_node(&node_1489, &node_1951, Dir::S, false).is_none());
     assert!(match_node(&node_1489, &node_1951, Dir::W, false).is_none());
-    
+
     let grid_2971 = grids.iter().find(|(i, _)| *i == 2971).unwrap();
     let node_2971 = Node::from_grid(grid_2971.0, grid_2971.1.clone());
 
     let iters1 = node_1489.get_axis_iter(Dir::W);
     let iters2 = node_2971.get_axis_iter(Dir::E);
-    assert_eq!(iters1.map(|x|*x).collect::<Vec<u8>>(), iters2.map(|x|*x).collect::<Vec<u8>>());
+    assert_eq!(
+        iters1.map(|x| *x).collect::<Vec<u8>>(),
+        iters2.map(|x| *x).collect::<Vec<u8>>()
+    );
     assert!(match_node(&node_1489, &node_2971, Dir::W, false).is_some());
 
     assert!(match_node(&node_1951, &node_1489, Dir::N, false).is_none());
@@ -436,4 +510,7 @@ fn test_day_20() {
     }
 
     assert_eq!(run(&input, TaskOfDay::First), Some(20899048083289));
+    assert_eq!(run(&input, TaskOfDay::Second), Some(0));
+
+
 }
