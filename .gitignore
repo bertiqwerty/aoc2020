@@ -2,3 +2,4 @@
 /target
 Cargo.lock
 tmp_res.txt
+.vs
