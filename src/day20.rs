@@ -1,8 +1,8 @@
+use crate::grid::{Grid, AxisIterator, Rot90, Rot270, FlipLr, FlipUd, Twice};
+
 use super::common::separate_by_blanks;
 use super::common::string_to_lines;
 use super::common::TaskOfDay;
-use super::grid::AxisIterator;
-use super::grid::Grid;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::BTreeMap;
@@ -116,8 +116,8 @@ fn transform_grid(grid: &Grid<u8>, ori: Dir, dir: Dir, flipped: bool) -> Grid<u8
         (Dir::W, Dir::E) | (Dir::E, Dir::W) => grid.fliplr(),
         (Dir::N, Dir::S) | (Dir::S, Dir::N) => grid.flipud(),
         (Dir::N, Dir::E) | (Dir::S, Dir::W) => grid.rot270(),
-        (Dir::S, Dir::E) | (Dir::N, Dir::W) => grid.rot90().flipud(),
-        (Dir::E, Dir::S) | (Dir::W, Dir::N) => grid.rot270().fliplr(),
+        (Dir::S, Dir::E) | (Dir::N, Dir::W) => grid.transform::<Twice<Rot90, FlipUd>>(),
+        (Dir::E, Dir::S) | (Dir::W, Dir::N) => grid.transform::<Twice<Rot270, FlipLr>>(),
     };
     if flipped {
         match dir {
@@ -226,7 +226,6 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
         .iter()
         .find(|(_, n)| n.get_neighbor(Dir::N).is_none() && n.get_neighbor(Dir::W).is_none())
         .unwrap().0;
-    print_hood(row_anchor, nodes);
     let grids_in_a_row = node_row_iter(row_anchor, &nodes).count();
     let grids_in_a_col = nodes.len() / grids_in_a_row; 
     let rows_per_view = nodes[&row_anchor].grid.rows - 2;
@@ -247,7 +246,7 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
             let view = &nodes[&current_id].grid.view(1..rows_per_view+1, 1..cols_per_view+1); 
             let col_offset = grids_col * cols_per_view;
             for (r, c) in iproduct!(0..view.rows(), 0..view.cols()) {
-                res[row_offset + r][col_offset + c] = view[r][c];
+                res[row_offset + r][col_offset + c] = *view.at(r, c);
             }
         }
         row_anchor = nodes[&row_anchor].s.unwrap_or(-1);
@@ -332,8 +331,6 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
                     "#....##....##....###".to_string(),
                     ".#..#..#..#..#..#...".to_string()
                 ]).unwrap();
-                print!("{:?}",merged_grid);
-                print!("{:?}",monster);
                 
                 Some(0u64)}
             ,
