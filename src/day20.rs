@@ -1,4 +1,4 @@
-use crate::grid::{Grid, AxisIterator, Rot90, Rot270, FlipLr, FlipUd, Twice};
+use crate::grid::{AxisIterator, FlipLr, FlipUd, Grid, Rot270, Rot90, Twice};
 
 use super::common::separate_by_blanks;
 use super::common::string_to_lines;
@@ -204,8 +204,7 @@ fn print_hood(node_id: i32, nodes: &BTreeMap<i32, Node>) {
 struct NodeIterator<'a> {
     dir: Dir,
     current_id: Option<i32>,
-    nodes: &'a BTreeMap<i32, Node>
-
+    nodes: &'a BTreeMap<i32, Node>,
 }
 
 impl<'a> Iterator for NodeIterator<'a> {
@@ -218,34 +217,45 @@ impl<'a> Iterator for NodeIterator<'a> {
 }
 
 fn node_row_iter<'a>(row_anchor: i32, nodes: &'a BTreeMap<i32, Node>) -> NodeIterator<'a> {
-    NodeIterator{dir: Dir::E, current_id:Some(row_anchor), nodes:nodes}
+    NodeIterator {
+        dir: Dir::E,
+        current_id: Some(row_anchor),
+        nodes: nodes,
+    }
 }
 fn node_col_iter<'a>(col_anchor: i32, nodes: &'a BTreeMap<i32, Node>) -> NodeIterator<'a> {
-    NodeIterator{dir: Dir::S, current_id:Some(col_anchor), nodes:nodes}
+    NodeIterator {
+        dir: Dir::S,
+        current_id: Some(col_anchor),
+        nodes: nodes,
+    }
 }
 
 fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
     let row_anchor0 = *nodes
         .iter()
         .find(|(_, n)| n.get_neighbor(Dir::N).is_none() && n.get_neighbor(Dir::W).is_none())
-        .unwrap().0;
+        .unwrap()
+        .0;
     let grids_in_a_row = node_row_iter(row_anchor0, &nodes).count();
-    let grids_in_a_col = nodes.len() / grids_in_a_row; 
+    let grids_in_a_col = nodes.len() / grids_in_a_row;
     let rows_per_view = nodes[&row_anchor0].grid.rows - 2;
     let cols_per_view = nodes[&row_anchor0].grid.cols - 2;
-    let res_rows = grids_in_a_row * (rows_per_view); 
+    let res_rows = grids_in_a_row * (rows_per_view);
     let res_cols = grids_in_a_col * (cols_per_view);
     let mut res: Grid<u8> = Grid {
         rows: res_rows,
         cols: res_cols,
-        data: vec![0; res_rows*res_cols]
+        data: vec![0; res_rows * res_cols],
     };
 
     for (cur_row, row_anchor) in node_col_iter(row_anchor0, &nodes).enumerate() {
         let row_offset = cur_row * rows_per_view;
         let row_iter = node_row_iter(row_anchor, &nodes);
         for (grids_col, current_id) in row_iter.enumerate() {
-            let view = &nodes[&current_id].grid.view(1..rows_per_view+1, 1..cols_per_view+1); 
+            let view = &nodes[&current_id]
+                .grid
+                .view(1..rows_per_view + 1, 1..cols_per_view + 1);
             let col_offset = grids_col * cols_per_view;
             for (r, c) in iproduct!(0..view.rows(), 0..view.cols()) {
                 res[row_offset + r][col_offset + c] = *view.at(r, c);
@@ -255,14 +265,14 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
     res
 }
 
-fn collect_nodes(grids: &Vec<String>) -> BTreeMap<i32, Node>{
+fn collect_nodes(grids: &Vec<String>) -> BTreeMap<i32, Node> {
     grids
-    .iter()
-    .map(|s| {
-        let (id, grid) = str_to_id_grid(s).unwrap();
-        (id, Node::from_grid(id, grid))
-    })
-    .collect::<BTreeMap<i32, Node>>()
+        .iter()
+        .map(|s| {
+            let (id, grid) = str_to_id_grid(s).unwrap();
+            (id, Node::from_grid(id, grid))
+        })
+        .collect::<BTreeMap<i32, Node>>()
 }
 
 pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
@@ -325,14 +335,15 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     match part {
         TaskOfDay::First => Some(corners.iter().map(|id| *id as u64).product()),
         TaskOfDay::Second => {
-                let merged_grid = merge_grids(&nodes);
-                let monster: Grid<u8> = Grid::from_lines(&vec![
-                    "..................#.".to_string(),
-                    "#....##....##....###".to_string(),
-                    ".#..#..#..#..#..#...".to_string()
-                ]).unwrap();
-                Some(0u64)}
-            ,
+            let merged_grid = merge_grids(&nodes);
+            let monster: Grid<u8> = Grid::from_lines(&vec![
+                "..................#.".to_string(),
+                "#....##....##....###".to_string(),
+                ".#..#..#..#..#..#...".to_string(),
+            ])
+            .unwrap();
+            Some(0u64)
+        }
     }
 }
 
@@ -507,6 +518,4 @@ fn test_day_20() {
 
     assert_eq!(run(&input, TaskOfDay::First), Some(20899048083289));
     assert_eq!(run(&input, TaskOfDay::Second), Some(0));
-
-
 }
