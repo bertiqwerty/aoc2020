@@ -1,4 +1,4 @@
-use crate::grid::{AxisIterator, FlipLr, FlipUd, Grid, Rot270, Rot90, Twice};
+use crate::grid::{AxisIterator, FlipLr, FlipUd, Grid, Rot270, Rot90, Twice, Identity};
 
 use super::common::separate_by_blanks;
 use super::common::string_to_lines;
@@ -75,7 +75,7 @@ impl Node {
         }
     }
 
-    fn get_axis_iter(&self, dir: Dir) -> AxisIterator<u8> {
+    fn get_axis_iter(&self, dir: Dir) -> AxisIterator<u8, Identity> {
         match dir {
             Dir::N => AxisIterator::make_row(0, &self.grid, 1),
             Dir::E => AxisIterator::make_col(self.grid.cols - 1, &self.grid, 1),
@@ -94,8 +94,10 @@ fn str_to_id_grid(s: &str) -> Option<(i32, Grid<u8>)> {
     Some((id, grid))
 }
 
-fn match_axis(iter1: &AxisIterator<u8>, iter2: &AxisIterator<u8>) -> Option<bool> {
-    if izip!(iter1.clone(), iter2.clone()).all(|(i1, i2)| i1 == i2) {
+fn match_axis(iter1: &AxisIterator<u8, Identity>, iter2: &AxisIterator<u8, Identity>) -> Option<bool> {
+    let mut iter1_clone = iter1.clone();
+    let mut iter2_clone = iter2.clone();
+    if izip!(iter1_clone, iter2_clone).all(|(i1, i2)| i1 == i2) {
         Some(false)
     } else if izip!(iter1.clone().rev(), iter2.clone()).all(|(i1, i2)| i1 == i2) {
         Some(true)
@@ -471,10 +473,10 @@ fn test_day_20() {
     assert_eq!(grid[0usize][0usize], 0);
 
     // 4 south matches 3 north
-    let it4north: AxisIterator<u8> = AxisIterator::make_row(grids[4].1.rows - 1, &grids[4].1, 1);
-    let it3south: AxisIterator<u8> = AxisIterator::make_row(0, &grids[3].1, 1);
+    let it4north= AxisIterator::make_row(grids[4].1.rows - 1, &grids[4].1, 1);
+    let it3south = AxisIterator::make_row(0, &grids[3].1, 1);
     assert!(match_axis(&it4north, &it3south).is_some());
-    let it31: AxisIterator<u8> = AxisIterator::make_row(1, &grids[3].1, 1);
+    let it31 = AxisIterator::make_row(1, &grids[3].1, 1);
     assert!(!match_axis(&it4north, &it31).is_some());
 
     let grid_1489 = grids.iter().find(|(i, _)| *i == 1489).unwrap();

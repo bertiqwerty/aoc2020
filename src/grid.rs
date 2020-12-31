@@ -13,8 +13,11 @@ pub struct Grid<T: DataType> {
 }
 
 impl<'a, T: DataType> Grid<T> {
-    pub fn view(
-        &'a self,
+    pub fn as_view(&'a self) -> GridView<'a, T, Identity> {
+        self.transformed_view::<Identity>(0..self.rows, 0..self.cols)
+    }
+
+    pub fn view(&'a self,
         row_range: Range<usize>,
         col_range: Range<usize>,
     ) -> GridView<'a, T, Identity> {
@@ -22,11 +25,12 @@ impl<'a, T: DataType> Grid<T> {
     }
 
     pub fn transform<TF: IdxTransform>(&self) -> Self {
-        self.transformed_view::<TF>(0..self.rows, 0..self.cols).to_grid()
+        self.transformed_view::<TF>(0..self.rows, 0..self.cols)
+            .to_grid()
     }
 
     /// First extracts the view, then applies the transformation.
-    pub fn transformed_view<TF: IdxTransform>( 
+    pub fn transformed_view<TF: IdxTransform>(
         &'a self,
         row_range: Range<usize>,
         col_range: Range<usize>,
@@ -43,6 +47,11 @@ impl<'a, T: DataType> Grid<T> {
             ),
         }
     }
+
+    pub fn at(&self, row: usize, col: usize) -> &T {
+        &self[row][col]
+    }
+
     pub fn rot90(&self) -> Self {
         self.transform::<Rot90>()
     }
@@ -67,6 +76,7 @@ pub trait IdxTransform {
     fn make(rows: usize, cols: usize) -> Self;
 }
 
+#[derive(Clone, Copy)]
 pub struct Rot90 {
     tf_rows: usize,
     tf_cols: usize,
@@ -89,6 +99,7 @@ impl IdxTransform for Rot90 {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct FlipLr {
     rows: usize,
     cols: usize,
@@ -111,6 +122,7 @@ impl IdxTransform for FlipLr {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Twice<TF1: IdxTransform, TF2: IdxTransform> {
     tf1: TF1,
     tf2: TF2,
@@ -136,6 +148,7 @@ impl<TF1: IdxTransform, TF2: IdxTransform> IdxTransform for Twice<TF1, TF2> {
 pub type Rot180 = Twice<Rot90, Rot90>;
 pub type Rot270 = Twice<Rot90, Rot180>;
 pub type FlipUd = Twice<Rot90, Twice<FlipLr, Rot270>>;
+#[derive(Clone, Copy)]
 pub struct Identity {
     rows: usize,
     cols: usize,
@@ -158,6 +171,7 @@ impl IdxTransform for Identity {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct GridView<'a, T: DataType, TF: IdxTransform> {
     pub row_start: usize,
     pub col_start: usize,
@@ -174,7 +188,7 @@ impl<'a, T: DataType, TF: IdxTransform> GridView<'a, T, TF> {
     pub fn cols(&self) -> usize {
         self.tf.tf_cols()
     }
-    pub fn at(&self, row: usize, col: usize) -> &T {
+    pub fn at(&self, row: usize, col: usize) -> &'a T {
         let (t_row, t_col) = self.tf.apply(row, col);
 
         let shifted_row = t_row + self.row_start;
@@ -278,19 +292,20 @@ pub enum Axis {
 }
 
 #[derive(Clone, Copy)]
-pub struct AxisIterator<'a, T: DataType> {
-    grid: &'a Grid<T>,
+pub struct AxisIterator<'a, T: DataType, TF: IdxTransform> {
+    grid: GridView<'a, T, TF>,
     start: isize,
     end: isize,
     step: isize,
     axis: Axis,
     axis_idx: usize,
 }
-impl<'a, T: DataType> AxisIterator<'a, T> {
-    pub fn make_row(row: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T> {
+
+impl<'a, T: DataType> AxisIterator<'a, T, Identity> {
+    pub fn make_row(row: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T, Identity> {
         let (start, end) = start_end(0, grid.cols as isize, step);
         return AxisIterator {
-            grid: grid,
+            grid: grid.as_view(),
             start: start,
             end: end,
             step: step,
@@ -298,10 +313,10 @@ impl<'a, T: DataType> AxisIterator<'a, T> {
             axis_idx: row,
         };
     }
-    pub fn make_col(col: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T> {
+    pub fn make_col(col: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T, Identity> {
         let (start, end) = start_end(0, grid.rows as isize, step);
         return AxisIterator {
-            grid: grid,
+            grid: grid.as_view(),
             start: start,
             end: end,
             step: step,
@@ -309,50 +324,49 @@ impl<'a, T: DataType> AxisIterator<'a, T> {
             axis_idx: col,
         };
     }
+} 
 
-    pub fn make_row_view<TF: IdxTransform>(
+impl<'a, T: DataType, TF: IdxTransform> AxisIterator<'a, T, TF> {
+
+    pub fn make_row_view(
         row: usize,
-        grid_view: &'a GridView<T, TF>,
+        grid_view: GridView<'a, T, TF>,
         step: isize,
-    ) -> AxisIterator<'a, T> {
-        let (start, end) = start_end(
-            grid_view.col_start as isize,
-            grid_view.col_end as isize,
+    ) -> AxisIterator<'a, T, TF> {
+        let (start, end) = start_end(0isize, grid_view.cols() as isize,
             step,
         );
 
         return AxisIterator {
-            grid: grid_view.grid,
+            grid: grid_view,
             start: start,
             end: end,
             step: step,
             axis: Axis::Row,
-            axis_idx: row + grid_view.row_start,
+            axis_idx: row,
         };
     }
-    pub fn make_col_view<TF: IdxTransform>(
+    pub fn make_col_view(
         col: usize,
-        grid_view: &'a GridView<T, TF>,
+        grid_view: GridView<'a, T, TF>,
         step: isize,
-    ) -> AxisIterator<'a, T> {
-        let (start, end) = start_end(
-            grid_view.row_start as isize,
-            grid_view.row_end as isize,
+    ) -> AxisIterator<'a, T, TF> {
+        let (start, end) = start_end(0isize, grid_view.rows() as isize,
             step,
         );
 
         return AxisIterator {
-            grid: grid_view.grid,
+            grid: grid_view,
             start: start,
             end: end,
             step: step,
             axis: Axis::Col,
-            axis_idx: col + grid_view.col_start,
+            axis_idx: col,
         };
     }
 }
 
-impl<'a, T: DataType> Iterator for AxisIterator<'a, T> {
+impl<'a, T: DataType, TF: IdxTransform> Iterator for AxisIterator<'a, T, TF> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
@@ -361,19 +375,19 @@ impl<'a, T: DataType> Iterator for AxisIterator<'a, T> {
         let nxt = self.start + self.step;
         match self.axis {
             Axis::Col => {
-                let res = Some(&self.grid[self.start as usize][self.axis_idx]);
+                let res: Option<&'a T> = Some(self.grid.at(self.start as usize, self.axis_idx));
                 self.start = nxt;
                 res
             }
             Axis::Row => {
-                let res = Some(&self.grid[self.axis_idx][self.start as usize]);
+                let res = Some(self.grid.at(self.axis_idx, self.start as usize));
                 self.start = nxt;
                 res
             }
         }
     }
 }
-impl<'a, T: DataType> DoubleEndedIterator for AxisIterator<'a, T> {
+impl<'a, T: DataType, TF: IdxTransform> DoubleEndedIterator for AxisIterator<'a, T, TF> {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.start == self.end {
             return None;
@@ -382,11 +396,11 @@ impl<'a, T: DataType> DoubleEndedIterator for AxisIterator<'a, T> {
         match self.axis {
             Axis::Col => {
                 self.end = nxt;
-                Some(&self.grid[self.end as usize][self.axis_idx])
+                Some(self.grid.at(self.end as usize, self.axis_idx))
             }
             Axis::Row => {
                 self.end = nxt;
-                Some(&self.grid[self.axis_idx][self.end as usize])
+                Some(self.grid.at(self.axis_idx, self.end as usize))
             }
         }
     }
@@ -400,28 +414,31 @@ fn test_grid() {
         data: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
     };
     let grid_14_13 = grid_axis_iter_test.view(1..4, 1..3);
-    println!("===GRID\n{:?}\n===GRIDVIEW\n{:?}", grid_axis_iter_test, grid_14_13);
-    let row_iter = AxisIterator::make_row_view(1, &grid_14_13, 1);
+    println!(
+        "===GRID\n{:?}\n===GRIDVIEW\n{:?}",
+        grid_axis_iter_test, grid_14_13
+    );
+    let row_iter = AxisIterator::make_row_view(1, grid_14_13, 1);
     for (result, reference) in izip!(row_iter, vec![7, 8].iter()) {
         assert_eq!(result, reference);
     }
-    let row_iter = AxisIterator::make_row_view(1, &grid_14_13, -1);
+    let row_iter = AxisIterator::make_row_view(1, grid_14_13, -1);
     for (result, reference) in izip!(row_iter, vec![8, 7].iter()) {
         assert_eq!(result, reference);
     }
-    let row_iter = AxisIterator::make_row_view(1, &grid_14_13, -1).rev();
+    let row_iter = AxisIterator::make_row_view(1, grid_14_13, -1).rev();
     for (result, reference) in izip!(row_iter, vec![7, 8].iter()) {
         assert_eq!(result, reference);
     }
-    let col_iter = AxisIterator::make_col_view(1, &grid_14_13, 1);
+    let col_iter = AxisIterator::make_col_view(1, grid_14_13, 1);
     for (result, reference) in izip!(col_iter, vec![5, 8, 11].iter()) {
         assert_eq!(result, reference);
     }
-    let col_iter = AxisIterator::make_col_view(1, &grid_14_13, -1);
+    let col_iter = AxisIterator::make_col_view(1, grid_14_13, -1);
     for (result, reference) in izip!(col_iter, vec![11, 8, 5].iter()) {
         assert_eq!(result, reference);
     }
-    let col_iter = AxisIterator::make_col_view(1, &grid_14_13, 1).rev();
+    let col_iter = AxisIterator::make_col_view(1, grid_14_13, 1).rev();
     for (result, reference) in izip!(col_iter, vec![11, 8, 5].iter()) {
         assert_eq!(result, reference);
     }
@@ -479,6 +496,4 @@ fn test_grid() {
     let grid = grid_axis_iter_test.view(1..3, 1..2).to_grid();
     let rot90_view = grid_axis_iter_test.transformed_view::<Rot90>(1..3, 1..2);
     assert_eq!(grid.rot90(), rot90_view.to_grid());
-
-
 }
