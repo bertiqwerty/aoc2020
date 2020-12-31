@@ -220,16 +220,19 @@ impl<'a> Iterator for NodeIterator<'a> {
 fn node_row_iter<'a>(row_anchor: i32, nodes: &'a BTreeMap<i32, Node>) -> NodeIterator<'a> {
     NodeIterator{dir: Dir::E, current_id:Some(row_anchor), nodes:nodes}
 }
+fn node_col_iter<'a>(col_anchor: i32, nodes: &'a BTreeMap<i32, Node>) -> NodeIterator<'a> {
+    NodeIterator{dir: Dir::S, current_id:Some(col_anchor), nodes:nodes}
+}
 
 fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
-    let mut row_anchor = *nodes
+    let row_anchor0 = *nodes
         .iter()
         .find(|(_, n)| n.get_neighbor(Dir::N).is_none() && n.get_neighbor(Dir::W).is_none())
         .unwrap().0;
-    let grids_in_a_row = node_row_iter(row_anchor, &nodes).count();
+    let grids_in_a_row = node_row_iter(row_anchor0, &nodes).count();
     let grids_in_a_col = nodes.len() / grids_in_a_row; 
-    let rows_per_view = nodes[&row_anchor].grid.rows - 2;
-    let cols_per_view = nodes[&row_anchor].grid.cols - 2;
+    let rows_per_view = nodes[&row_anchor0].grid.rows - 2;
+    let cols_per_view = nodes[&row_anchor0].grid.cols - 2;
     let res_rows = grids_in_a_row * (rows_per_view); 
     let res_cols = grids_in_a_col * (cols_per_view);
     let mut res: Grid<u8> = Grid {
@@ -238,8 +241,7 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
         data: vec![0; res_rows*res_cols]
     };
 
-    let mut cur_row = 0;
-    while cur_row < grids_in_a_row {
+    for (cur_row, row_anchor) in node_col_iter(row_anchor0, &nodes).enumerate() {
         let row_offset = cur_row * rows_per_view;
         let row_iter = node_row_iter(row_anchor, &nodes);
         for (grids_col, current_id) in row_iter.enumerate() {
@@ -249,8 +251,6 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
                 res[row_offset + r][col_offset + c] = *view.at(r, c);
             }
         }
-        row_anchor = nodes[&row_anchor].s.unwrap_or(-1);
-        cur_row += 1;
     }
     res
 }
@@ -331,7 +331,6 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
                     "#....##....##....###".to_string(),
                     ".#..#..#..#..#..#...".to_string()
                 ]).unwrap();
-                
                 Some(0u64)}
             ,
     }
