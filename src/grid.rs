@@ -493,7 +493,9 @@ fn test_grid() {
     assert_eq!(ud_flip[1][1], 2);
     assert_eq!(ud_flip[1][2], 3);
 
-    let grid = grid_axis_iter_test.view(1..3, 1..2).to_grid();
-    let rot90_view = grid_axis_iter_test.transformed_view::<Rot90>(1..3, 1..2);
+    let grid = grid_axis_iter_test.view(1..4, 1..3).to_grid();
+    let rot90_view = grid_axis_iter_test.transformed_view::<Rot90>(1..4, 1..3);
     assert_eq!(grid.rot90(), rot90_view.to_grid());
+    let col_iter = AxisIterator::make_col_view(2, rot90_view, 1);
+    assert_eq!(col_iter.collect::<Vec<&i32>>(), vec![&11, &10]);
 }
