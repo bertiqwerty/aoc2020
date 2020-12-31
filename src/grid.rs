@@ -293,7 +293,7 @@ pub enum Axis {
 
 #[derive(Clone, Copy)]
 pub struct AxisIterator<'a, T: DataType, TF: IdxTransform> {
-    grid: GridView<'a, T, TF>,
+    view: GridView<'a, T, TF>,
     start: isize,
     end: isize,
     step: isize,
@@ -305,7 +305,7 @@ impl<'a, T: DataType> AxisIterator<'a, T, Identity> {
     pub fn make_row(row: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T, Identity> {
         let (start, end) = start_end(0, grid.cols as isize, step);
         return AxisIterator {
-            grid: grid.as_view(),
+            view: grid.as_view(),
             start: start,
             end: end,
             step: step,
@@ -316,7 +316,7 @@ impl<'a, T: DataType> AxisIterator<'a, T, Identity> {
     pub fn make_col(col: usize, grid: &'a Grid<T>, step: isize) -> AxisIterator<'a, T, Identity> {
         let (start, end) = start_end(0, grid.rows as isize, step);
         return AxisIterator {
-            grid: grid.as_view(),
+            view: grid.as_view(),
             start: start,
             end: end,
             step: step,
@@ -338,7 +338,7 @@ impl<'a, T: DataType, TF: IdxTransform> AxisIterator<'a, T, TF> {
         );
 
         return AxisIterator {
-            grid: grid_view,
+            view: grid_view,
             start: start,
             end: end,
             step: step,
@@ -356,7 +356,7 @@ impl<'a, T: DataType, TF: IdxTransform> AxisIterator<'a, T, TF> {
         );
 
         return AxisIterator {
-            grid: grid_view,
+            view: grid_view,
             start: start,
             end: end,
             step: step,
@@ -375,12 +375,12 @@ impl<'a, T: DataType, TF: IdxTransform> Iterator for AxisIterator<'a, T, TF> {
         let nxt = self.start + self.step;
         match self.axis {
             Axis::Col => {
-                let res: Option<&'a T> = Some(self.grid.at(self.start as usize, self.axis_idx));
+                let res: Option<&'a T> = Some(self.view.at(self.start as usize, self.axis_idx));
                 self.start = nxt;
                 res
             }
             Axis::Row => {
-                let res = Some(self.grid.at(self.axis_idx, self.start as usize));
+                let res = Some(self.view.at(self.axis_idx, self.start as usize));
                 self.start = nxt;
                 res
             }
@@ -396,11 +396,11 @@ impl<'a, T: DataType, TF: IdxTransform> DoubleEndedIterator for AxisIterator<'a,
         match self.axis {
             Axis::Col => {
                 self.end = nxt;
-                Some(self.grid.at(self.end as usize, self.axis_idx))
+                Some(self.view.at(self.end as usize, self.axis_idx))
             }
             Axis::Row => {
                 self.end = nxt;
-                Some(self.grid.at(self.axis_idx, self.end as usize))
+                Some(self.view.at(self.axis_idx, self.end as usize))
             }
         }
     }
