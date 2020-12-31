@@ -25,7 +25,8 @@ impl<'a, T: DataType> Grid<T> {
         self.transformed_view::<TF>(0..self.rows, 0..self.cols).to_grid()
     }
 
-    pub fn transformed_view<TF: IdxTransform>(
+    /// First extracts the view, then applies the transformation.
+    pub fn transformed_view<TF: IdxTransform>( 
         &'a self,
         row_range: Range<usize>,
         col_range: Range<usize>,
@@ -43,15 +44,7 @@ impl<'a, T: DataType> Grid<T> {
         }
     }
     pub fn rot90(&self) -> Self {
-        let mut res: Self = Grid {
-            rows: self.cols,
-            cols: self.rows,
-            data: vec![T::zero(); self.rows * self.cols],
-        };
-        for (r, c) in iproduct!(0..self.rows, 0..self.cols) {
-            res[self.cols - 1 - c][r] = self[r][c];
-        }
-        res
+        self.transform::<Rot90>()
     }
     pub fn rot180(&self) -> Self {
         self.transform::<Rot180>()
@@ -401,13 +394,13 @@ impl<'a, T: DataType> DoubleEndedIterator for AxisIterator<'a, T> {
 
 #[test]
 fn test_grid() {
-    let grid0 = Grid {
+    let grid_axis_iter_test = Grid {
         rows: 4,
         cols: 3,
         data: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
     };
-    let grid_14_13 = grid0.view(1..4, 1..3);
-    println!("===GRID\n{:?}\n===GRIDVIEW\n{:?}", grid0, grid_14_13);
+    let grid_14_13 = grid_axis_iter_test.view(1..4, 1..3);
+    println!("===GRID\n{:?}\n===GRIDVIEW\n{:?}", grid_axis_iter_test, grid_14_13);
     let row_iter = AxisIterator::make_row_view(1, &grid_14_13, 1);
     for (result, reference) in izip!(row_iter, vec![7, 8].iter()) {
         assert_eq!(result, reference);
@@ -482,5 +475,10 @@ fn test_grid() {
     assert_eq!(ud_flip[1][0], 1);
     assert_eq!(ud_flip[1][1], 2);
     assert_eq!(ud_flip[1][2], 3);
+
+    let grid = grid_axis_iter_test.view(1..3, 1..2).to_grid();
+    let rot90_view = grid_axis_iter_test.transformed_view::<Rot90>(1..3, 1..2);
+    assert_eq!(grid.rot90(), rot90_view.to_grid());
+
 
 }
