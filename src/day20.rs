@@ -1,4 +1,7 @@
-use crate::grid::{AxisIterator, FlipLr, FlipUd, Grid, Rot270, Rot90, Twice, Identity};
+use crate::grid::{
+    AxisIterator, FlipLr, FlipUd, Grid, GridView, Identity, IdxTransform, Rot180, Rot270, Rot90,
+    Twice,
+};
 
 use super::common::separate_by_blanks;
 use super::common::string_to_lines;
@@ -94,9 +97,12 @@ fn str_to_id_grid(s: &str) -> Option<(i32, Grid<u8>)> {
     Some((id, grid))
 }
 
-fn match_axis(iter1: &AxisIterator<u8, Identity>, iter2: &AxisIterator<u8, Identity>) -> Option<bool> {
-    let mut iter1_clone = iter1.clone();
-    let mut iter2_clone = iter2.clone();
+fn match_axis(
+    iter1: &AxisIterator<u8, Identity>,
+    iter2: &AxisIterator<u8, Identity>,
+) -> Option<bool> {
+    let iter1_clone = iter1.clone();
+    let iter2_clone = iter2.clone();
     if izip!(iter1_clone, iter2_clone).all(|(i1, i2)| i1 == i2) {
         Some(false)
     } else if izip!(iter1.clone().rev(), iter2.clone()).all(|(i1, i2)| i1 == i2) {
@@ -267,6 +273,63 @@ fn merge_grids(nodes: &BTreeMap<i32, Node>) -> Grid<u8> {
     res
 }
 
+fn roughness_per_orientation<'a, TF: IdxTransform>(
+    mut grid: Grid<u8>,
+    monster: GridView<'a, u8, TF>,
+) -> (usize, Grid<u8>) {
+    let row_end = grid.rows + 1 - monster.rows();
+    let col_end = grid.cols + 1 - monster.cols();
+    let mut monster_buffer: Grid<u8> = monster.to_grid();
+    let n_monster_nonzeros = iproduct!(0..monster.rows(), 0..monster.cols())
+        .filter(|(r, c)| *monster.at(*r, *c) > 0)
+        .count();
+
+    for (r, c) in iproduct!(0..row_end, 0..col_end) {
+        for (r_monster, c_monster) in iproduct!(0..monster.rows(), 0..monster.cols()) {
+            let monster_val = *monster.at(r_monster, c_monster);
+            monster_buffer[r_monster][c_monster] =
+                ((monster_val > 0u8) && (*grid.at(r + r_monster, c + c_monster)) > 0u8) as u8;
+        }
+        let n_monster_buffer_nonzeros = monster_buffer.data.iter().filter(|i| **i > 0).count();
+        if n_monster_buffer_nonzeros == n_monster_nonzeros {
+            for (r_monster, c_monster) in iproduct!(0..monster.rows(), 0..monster.cols()) {
+                let monster_val = *monster.at(r_monster, c_monster);
+                grid[r + r_monster][c + c_monster] = match monster_val {
+                    0 => *grid.at(r + r_monster, c + c_monster),
+                    _ => 0u8,
+                };
+            }
+        }
+    }
+    (grid.data.iter().filter(|i| **i > 0).count(), grid)
+}
+
+fn roughness(mut grid: Grid<u8>, monster: &Grid<u8>) -> usize {
+    let roughness_calls: Vec<Box<dyn FnOnce(Grid<u8>) -> (usize, Grid<u8>)>> = vec![
+        Box::new(|g| roughness_per_orientation(g, monster.as_view())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Rot90>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Rot180>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Rot270>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<FlipLr>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot90, FlipLr>>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot180, FlipLr>>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot270, FlipLr>>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<FlipUd>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot90, FlipUd>>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot180, FlipUd>>())),
+        Box::new(|g| roughness_per_orientation(g, monster.as_tf_view::<Twice<Rot270, FlipUd>>())),
+    ];
+    let n_nonzeros = grid.data.iter().filter(|i| **i > 0).count();
+    for call in roughness_calls {
+        let res = call(grid);
+        if res.0 < n_nonzeros {
+            return res.0;
+        }
+        grid = res.1;
+    }
+    n_nonzeros
+}
+
 fn collect_nodes(grids: &Vec<String>) -> BTreeMap<i32, Node> {
     grids
         .iter()
@@ -277,7 +340,7 @@ fn collect_nodes(grids: &Vec<String>) -> BTreeMap<i32, Node> {
         .collect::<BTreeMap<i32, Node>>()
 }
 
-pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
     let input_grids = separate_by_blanks(&input, "\n");
     let mut nodes = collect_nodes(&input_grids);
 
@@ -335,7 +398,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
     }
 
     match part {
-        TaskOfDay::First => Some(corners.iter().map(|id| *id as u64).product()),
+        TaskOfDay::First => Some(corners.iter().map(|id| *id as usize).product()),
         TaskOfDay::Second => {
             let merged_grid = merge_grids(&nodes);
             let monster: Grid<u8> = Grid::from_lines(&vec![
@@ -344,7 +407,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<u64> {
                 ".#..#..#..#..#..#...".to_string(),
             ])
             .unwrap();
-            Some(0u64)
+            Some(roughness(merged_grid, &monster))
         }
     }
 }
@@ -473,7 +536,7 @@ fn test_day_20() {
     assert_eq!(grid[0usize][0usize], 0);
 
     // 4 south matches 3 north
-    let it4north= AxisIterator::make_row(grids[4].1.rows - 1, &grids[4].1, 1);
+    let it4north = AxisIterator::make_row(grids[4].1.rows - 1, &grids[4].1, 1);
     let it3south = AxisIterator::make_row(0, &grids[3].1, 1);
     assert!(match_axis(&it4north, &it3south).is_some());
     let it31 = AxisIterator::make_row(1, &grids[3].1, 1);
@@ -519,5 +582,5 @@ fn test_day_20() {
     }
 
     assert_eq!(run(&input, TaskOfDay::First), Some(20899048083289));
-    assert_eq!(run(&input, TaskOfDay::Second), Some(0));
+    assert_eq!(run(&input, TaskOfDay::Second), Some(273));
 }

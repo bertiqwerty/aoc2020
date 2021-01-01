@@ -17,6 +17,10 @@ impl<'a, T: DataType> Grid<T> {
         self.transformed_view::<Identity>(0..self.rows, 0..self.cols)
     }
 
+    pub fn as_tf_view<TF: IdxTransform>(&'a self) -> GridView<'a, T, TF> {
+        self.transformed_view::<TF>(0..self.rows, 0..self.cols)
+    }
+
     pub fn view(&'a self,
         row_range: Range<usize>,
         col_range: Range<usize>,
