@@ -5,21 +5,23 @@ pub enum TaskOfDay {
     Second,
 }
 
-
-
 pub fn split_in2_tuple<'a>(to_be_split: &'a str, splitter: &str) -> (&'a str, &'a str) {
     let mut splt = to_be_split.split(splitter).map(|s| s.trim());
     (splt.next().unwrap(), splt.next().unwrap())
 }
 
-pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String> {
-    // TODO: currently, last element of input must be a blank line/string
-    let split_positions = input
+pub fn find_split_positions(input: &Vec<String>) -> Vec<usize> {
+    input
         .iter()
         .enumerate()
         .filter(|t: &(usize, &String)| t.1.len() == 0)
         .map(|t: (usize, &String)| t.0)
-        .collect::<Vec<usize>>();
+        .collect::<Vec<usize>>()
+}
+
+pub fn separate_by_blanks(input: &Vec<String>, joiner: &str) -> Vec<String> {
+    // TODO: currently, last element of input must be a blank line/string
+    let split_positions = find_split_positions(&input);
     let splits_shifted = &split_positions[1..];
     iter::once(input[0..split_positions[0]].join(joiner))
         .chain(

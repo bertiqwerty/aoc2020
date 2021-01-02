@@ -19,6 +19,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day19;
 mod day20;
 use common::TaskOfDay;
 
@@ -94,7 +95,9 @@ fn main() {
     unwrap_print_res(run(12, day12::run));
     unwrap_print_res(run(13, day13::run));
     unwrap_print_res(run(14, day14::run));
+    unwrap_print_res(run_with_blank_lines(19, day19::run));
     unwrap_print_res(run_with_blank_lines(20, day20::run));
+    
 
 }
 
@@ -114,7 +117,6 @@ fn regression_tests() {
     assert_eq!(run(12, day12::run), (Some(2280), Some(38693)));
     assert_eq!(run(13, day13::run), (Some(3464), Some(760171380521445)));
     assert_eq!(run(14, day14::run), (Some(11612740949946), Some(3394509207186)));
+    assert_eq!(run_with_blank_lines(19, day19::run), (Some(213), Some(213)));
     assert_eq!(run_with_blank_lines(20, day20::run), (Some(111936085519519), Some(1792)));
-
-
 }
