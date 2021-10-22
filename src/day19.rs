@@ -18,6 +18,9 @@ enum Op {
 
 impl Op {
     pub fn eval<'a>(&self, msgs: &Vec<&'a str>, rules: &Vec<Op>) -> Vec<&'a str> {
+        if msgs.len() == 0 {
+            return msgs.clone();
+        }
         match self {
             Op::Idx(idx) => rules[*idx].eval(msgs, rules),
             Op::Char(c) => msgs
@@ -68,17 +71,26 @@ ops_factory!(
         BinOp {
             apply: |op1, op2| { Op::Concatenate(vec![op1, op2]) },
             prio: 1,
-            is_commutative: true
+            is_commutative: false
         }
     )
 );
 
-pub fn run(input: &Vec<String>, _: TaskOfDay) -> Option<usize> {
+pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
     // basic idea is that numbers in rules are operators, use exmex with operator literals
     let split_pos = find_split_positions(input);
     let rules_raw = &input[0..split_pos[0]];
     let mut rules_strs = vec!["".to_string(); rules_raw.len()];
     for rule_raw in rules_raw.iter() {
+        let rule_raw = match part {
+            TaskOfDay::Second if rule_raw[0..2].eq("8:") => {
+                rule_raw.replace("8: 42", "8: 42 | 42 8")
+            }
+            TaskOfDay::Second if rule_raw[0..3].eq("11:") => {
+                rule_raw.replace("11: 42 31", "11: 42 31 | 42 11 31")
+            }
+            _ => rule_raw.clone(),
+        };
         let mut split = rule_raw.split(":");
         let i = split.next()?.parse::<usize>().ok()?;
         rules_strs[i] = split
@@ -139,5 +151,4 @@ fn test_day_19() {
     // 2(babbb) = 4(4(babbb) => []) => [] | 5(5(babbb) => [(a, abbb)]) => []
     // 3(babbb) = 5(4(babbb) => []) => [] | 4(5(babbb) => [(b, abbb)]) => [(a, bbb)]
     // 5(bbb) => [(b, bb)]
-
 }
