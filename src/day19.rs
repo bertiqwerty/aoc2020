@@ -1,108 +1,120 @@
 use super::common::find_split_positions;
 use super::common::TaskOfDay;
-use std::collections::HashMap;
+use exmex::ExResult;
+use exmex::Express;
+use exmex::FlatEx;
+use exmex::{ops_factory, BinOp, MakeOperators, Operator};
+use std::fmt::Debug;
+use std::num::ParseIntError;
+use std::str::FromStr;
 
-#[derive(Debug)]
-enum Rule {
-    And(Vec<usize>),
-    Or(Vec<Vec<usize>>),
-    Char(char),
-}
-
-/// Rule or Index
-enum Rori<'a> {
+#[derive(Clone, Debug)]
+enum Op {
     Idx(usize),
-    OrRule(&'a Rule)
+    Char(char),
+    Concatenate(Vec<Op>),
+    Union(Vec<Op>),
 }
 
-fn check_message<'a>(msg: &'a str, r_or_i: Rori, rules: &Vec<Rule>) -> (bool, &'a str) {
-    if msg.len() == 0 {
-        return (false, msg);
-    }
-    let mut submsg = msg;
-
-    let rule = match r_or_i {
-        Rori::Idx(i) => &rules[i],
-        Rori::OrRule(r) => &r
-    };
-    match rule {
-        Rule::And(v) => {
-            for vi in v {
-                let tmp = check_message(submsg,Rori::Idx(*vi), rules);
-                let res = tmp.0;
-                submsg = tmp.1;
-                if !res {
-                    return (false, submsg);
-                }                
-            }
-            (true, submsg)
-        }
-        Rule::Char(c) => if submsg.chars().next().unwrap() == *c {(true, &submsg[1..])} else {(false, submsg)}
-        Rule::Or(vv) => {
-            for v in vv {
-                let (res, submsg_candidate) = check_message(submsg, Rori::OrRule(&Rule::And(v.clone())), rules);
-                if res {
-                    return (true, submsg_candidate);
+impl Op {
+    pub fn eval<'a>(&self, msgs: &Vec<&'a str>, rules: &Vec<Op>) -> Vec<&'a str> {
+        match self {
+            Op::Idx(idx) => rules[*idx].eval(msgs, rules),
+            Op::Char(c) => msgs
+                .iter()
+                .filter(|msg| msg.chars().nth(0) == Some(*c))
+                .map(|msg| &msg[1..])
+                .collect::<Vec<_>>(),
+            Op::Concatenate(ops) => {
+                let mut res = msgs.clone();
+                for op in ops {
+                    res = op.eval(&res, rules);
                 }
+                res
             }
-            (false, submsg)
+            Op::Union(ops) => ops
+                .iter()
+                .flat_map(|op| op.eval(msgs, rules))
+                .collect::<Vec<_>>(),
         }
     }
-
 }
 
-fn parse_rules(rules: &[String]) -> Vec<Rule> {
-    let mut rules_map = rules
-    .iter()
-    .map(|rule| {
-        let mut splitted = rule.split(" ");
-        let key_str = splitted.next().unwrap();
-        let key = key_str[0..key_str.len() - 1].parse::<usize>().unwrap();
-        let rule_str = rule[key_str.len() + 1..].trim();
-        if "\"a\"" == rule_str || "\"b\"" == rule_str {
-            (key, Rule::Char(rule_str.chars().find(|c| c != &'"').unwrap()))
-        } else if rule_str.contains("|") {
-            (key, Rule::Or(
-                rule_str
-                    .split("|")
-                    .map(|and_part|
-                        and_part
-                            .split(" ").filter(|s| s.len() > 0)
-                            .map(|s| s.parse::<usize>().unwrap()).collect::<Vec<usize>>()
-                    )
-                    .collect::<Vec<Vec<usize>>>(),
-            ))
-        } else {
-            (key, Rule::And(rule_str
-                .split(" ")
-                .map(|s| s.parse::<usize>().unwrap()).collect::<Vec<usize>>()))
+impl FromStr for Op {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let first = s.chars().nth(1);
+        Ok(match first {
+            Some(letter) if letter == 'a' || letter == 'b' => Op::Char(letter),
+            _ => Op::Idx(s.parse::<usize>()?),
+        })
+    }
+}
+
+ops_factory!(
+    OpsOpsFactory,
+    Op,
+    Operator::make_bin(
+        "|",
+        BinOp {
+            apply: |op1, op2| { Op::Union(vec![op1, op2]) },
+            prio: 0,
+            is_commutative: true
         }
-    })
-    .collect::<HashMap<usize, Rule>>();
-    let mut res: Vec<Rule> = Vec::with_capacity(rules_map.len());
-    for _ in 0..rules_map.len() {
-        res.push(Rule::Char('0'));
-    }
-    for (i, r) in rules_map.drain() {
-        res[i] = r;
-    }
-    res
-}
+    ),
+    Operator::make_bin(
+        "o",
+        BinOp {
+            apply: |op1, op2| { Op::Concatenate(vec![op1, op2]) },
+            prio: 1,
+            is_commutative: true
+        }
+    )
+);
 
-pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
+pub fn run(input: &Vec<String>, _: TaskOfDay) -> Option<usize> {
+    // basic idea is that numbers in rules are operators, use exmex with operator literals
     let split_pos = find_split_positions(input);
-    let rules = &input[0..split_pos[0]];
+    let rules_raw = &input[0..split_pos[0]];
+    let mut rules_strs = vec!["".to_string(); rules_raw.len()];
+    for rule_raw in rules_raw.iter() {
+        let mut split = rule_raw.split(":");
+        let i = split.next()?.parse::<usize>().ok()?;
+        rules_strs[i] = split
+            .next()?
+            .trim()
+            .replace(" ", "o")
+            .replace("o|", "|")
+            .replace("|o", "|");
+    }
+    let literal_pattern = "[0-9]+|\"a\"|\"b\"";
+    let rules = rules_strs
+        .iter()
+        .map(|s| -> ExResult<_> {
+            let flatex = FlatEx::<Op, OpsOpsFactory>::from_pattern(s, literal_pattern).unwrap();
+            flatex.eval(&[])
+        })
+        .collect::<ExResult<Vec<_>>>()
+        .ok()?;
     let messages = &input[split_pos[0] + 1..];
-    let parsed_rules = parse_rules(rules);
-    Some(messages.iter().filter(|msg| {
-        let (str_match, rest_str) = check_message(msg, Rori::Idx(0), &parsed_rules);
-        str_match && rest_str.len() == 0 && msg.len() > 0
-    }).count())
+    Some(
+        messages
+            .iter()
+            .filter(|msg| {
+                // we consider an evaluation a match if all letters have been consumed
+                // and precisely the empty string is left in the result vector.
+                let res = rules[0].eval(&vec![msg.as_str()], &rules);
+                res.iter().filter(|s| s.len() == 0).count() == 1
+            })
+            .count(),
+    )
 }
 
 #[test]
 fn test_day_19() {
     use super::common::string_to_lines;
+
     let input = string_to_lines(
         "0: 4 1 5
     1: 2 3 | 3 2
@@ -119,4 +131,13 @@ fn test_day_19() {
     aaaabbb",
     );
     assert_eq!(run(&input, TaskOfDay::First), Some(2usize));
+
+    // a ((a a | b b) (a b | b a)) | (a b | b a) (a a| b b)) b
+    // 0(ababbb) = 5(1(4(ababbb)))
+    // 4(ababbb) =  a[babbb] == a => [(a, babbb)]
+    // 1(babbb) = 3(2(babbb)) | 2(3(babbb) => [(a, bbb)]) => [(bb, b)]
+    // 2(babbb) = 4(4(babbb) => []) => [] | 5(5(babbb) => [(a, abbb)]) => []
+    // 3(babbb) = 5(4(babbb) => []) => [] | 4(5(babbb) => [(b, abbb)]) => [(a, bbb)]
+    // 5(bbb) => [(b, bb)]
+
 }

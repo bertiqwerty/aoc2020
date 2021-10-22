@@ -119,7 +119,7 @@ fn count_combinations_of_chain(chain: Chain, memoization: &mut HashMap<u128, usi
                 inner_compute(chain.sum_with_next(i), dupla)
             }
         }
-    };
+    }
 
     if memoization.contains_key(&chain.value) {
         return memoization[&chain.value];

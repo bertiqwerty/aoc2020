@@ -196,7 +196,7 @@ fn get_corners(nodes: &BTreeMap<i32, Node>) -> Vec<i32> {
         .collect::<Vec<i32>>()
 }
 
-fn print_hood(node_id: i32, nodes: &BTreeMap<i32, Node>) {
+fn _print_hood(node_id: i32, nodes: &BTreeMap<i32, Node>) {
     let un = |id: Option<i32>| id.unwrap_or(-1);
     println!("\t{:04}", un(nodes[&node_id].n));
     println!(
