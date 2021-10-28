@@ -9,33 +9,33 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
-enum Op {
+enum RuleOp {
     Idx(usize),
     Char(char),
-    Concatenate(Vec<Op>),
-    Union(Vec<Op>),
+    Concatenate(Vec<RuleOp>),
+    Union(Vec<RuleOp>),
 }
 
-impl Op {
-    pub fn eval<'a>(&self, msgs: &Vec<&'a str>, rules: &Vec<Op>) -> Vec<&'a str> {
+impl RuleOp {
+    pub fn eval<'a>(&self, msgs: &Vec<&'a str>, rules: &Vec<RuleOp>) -> Vec<&'a str> {
         if msgs.len() == 0 {
             return msgs.clone();
         }
         match self {
-            Op::Idx(idx) => rules[*idx].eval(msgs, rules),
-            Op::Char(c) => msgs
+            RuleOp::Idx(idx) => rules[*idx].eval(msgs, rules),
+            RuleOp::Char(c) => msgs
                 .iter()
                 .filter(|msg| msg.chars().nth(0) == Some(*c))
                 .map(|msg| &msg[1..])
                 .collect::<Vec<_>>(),
-            Op::Concatenate(ops) => {
+            RuleOp::Concatenate(ops) => {
                 let mut res = msgs.clone();
                 for op in ops {
                     res = op.eval(&res, rules);
                 }
                 res
             }
-            Op::Union(ops) => ops
+            RuleOp::Union(ops) => ops
                 .iter()
                 .flat_map(|op| op.eval(msgs, rules))
                 .collect::<Vec<_>>(),
@@ -43,25 +43,25 @@ impl Op {
     }
 }
 
-impl FromStr for Op {
+impl FromStr for RuleOp {
     type Err = ParseIntError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let first = s.chars().nth(1);
         Ok(match first {
-            Some(letter) if letter == 'a' || letter == 'b' => Op::Char(letter),
-            _ => Op::Idx(s.parse::<usize>()?),
+            Some(letter) if letter == 'a' || letter == 'b' => RuleOp::Char(letter),
+            _ => RuleOp::Idx(s.parse::<usize>()?),
         })
     }
 }
 
 ops_factory!(
     OpsOpsFactory,
-    Op,
+    RuleOp,
     Operator::make_bin(
         "|",
         BinOp {
-            apply: |op1, op2| { Op::Union(vec![op1, op2]) },
+            apply: |op1, op2| { RuleOp::Union(vec![op1, op2]) },
             prio: 0,
             is_commutative: true
         }
@@ -69,7 +69,7 @@ ops_factory!(
     Operator::make_bin(
         "o",
         BinOp {
-            apply: |op1, op2| { Op::Concatenate(vec![op1, op2]) },
+            apply: |op1, op2| { RuleOp::Concatenate(vec![op1, op2]) },
             prio: 1,
             is_commutative: false
         }
@@ -104,7 +104,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
     let rules = rules_strs
         .iter()
         .map(|s| -> ExResult<_> {
-            let flatex = FlatEx::<Op, OpsOpsFactory>::from_pattern(s, literal_pattern).unwrap();
+            let flatex = FlatEx::<RuleOp, OpsOpsFactory>::from_pattern(s, literal_pattern)?;
             flatex.eval(&[])
         })
         .collect::<ExResult<Vec<_>>>()
