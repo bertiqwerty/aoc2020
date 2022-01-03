@@ -32,7 +32,7 @@ Elapsed second:	0 millis
 
 Running day 4
 Elapsed first:	0 millis
-Elapsed second:	99 millis
+Elapsed second:	118 millis
 247, 145
 
 Running day 5
@@ -66,8 +66,8 @@ Elapsed second:	0 millis
 2738, 74049191673856
 
 Running day 11
-Elapsed first:	20 millis
-Elapsed second:	49 millis
+Elapsed first:	25 millis
+Elapsed second:	54 millis
 2476, 2257
 
 Running day 12
@@ -82,17 +82,17 @@ Elapsed second:	0 millis
 
 Running day 14
 Elapsed first:	0 millis
-Elapsed second:	7 millis
+Elapsed second:	8 millis
 11612740949946, 3394509207186
 
 Running day 19
-Elapsed first:	17 millis
-Elapsed second:	53 millis
+Elapsed first:	8 millis
+Elapsed second:	46 millis
 213, 325
 
 Running day 20
-Elapsed first:	6 millis
-Elapsed second:	11 millis
+Elapsed first:	7 millis
+Elapsed second:	12 millis
 111936085519519, 1792
 
 ```
