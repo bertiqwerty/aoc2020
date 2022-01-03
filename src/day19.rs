@@ -1,9 +1,10 @@
 use super::common::find_split_positions;
 use super::common::TaskOfDay;
-use exmex::ExResult;
-use exmex::Express;
-use exmex::FlatEx;
-use exmex::{ops_factory, BinOp, MakeOperators, Operator};
+
+use exmex::{
+    literal_matcher_from_pattern, ops_factory, BinOp, Express, ExResult, FlatEx, MakeOperators,
+    MatchLiteral, Operator,
+};
 use std::fmt::Debug;
 use std::num::ParseIntError;
 use std::str::FromStr;
@@ -100,11 +101,12 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
             .replace("o|", "|")
             .replace("|o", "|");
     }
-    let literal_pattern = "[0-9]+|\"a\"|\"b\"";
+    const LITERAL_PATTERN: &str = "^([0-9]+|\"a\"|\"b\")";
+    literal_matcher_from_pattern!(OpsMatcher, LITERAL_PATTERN);
     let rules = rules_strs
         .iter()
         .map(|s| -> ExResult<_> {
-            let flatex = FlatEx::<RuleOp, OpsOpsFactory>::from_pattern(s, literal_pattern)?;
+            let flatex = FlatEx::<RuleOp, OpsOpsFactory, OpsMatcher>::from_str(s)?;
             flatex.eval(&[])
         })
         .collect::<ExResult<Vec<_>>>()
