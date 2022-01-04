@@ -103,7 +103,7 @@ pub fn run(input: &Vec<String>, part: TaskOfDay) -> Option<usize> {
     }
     const LITERAL_PATTERN: &str = "^([0-9]+|\"a\"|\"b\")";
     literal_matcher_from_pattern!(OpsMatcher, LITERAL_PATTERN);
-    type FlatExOps<'a> = FlatEx::<'a, RuleOp, OpsOpsFactory, OpsMatcher>;
+    type FlatExOps = FlatEx::<RuleOp, OpsOpsFactory, OpsMatcher>;
     let rules = rules_strs
         .iter()
         .map(|s| -> ExResult<_> {
